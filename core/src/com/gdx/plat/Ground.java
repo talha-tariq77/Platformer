@@ -7,6 +7,8 @@ public class Ground {
     PolygonShape groundShape = new PolygonShape();
     public static Fixture groundFixture;
 
+    Filter groundFilter;
+
     int groundLength = 10000;
     int groundHeight = 5;
 //    FixtureDef groundFixtureDef;
@@ -17,9 +19,12 @@ public class Ground {
 
         groundShape.setAsBox(groundLength, groundHeight);
         groundBody.createFixture(groundShape, 0f);
+        groundFilter = new Filter();
+        groundFilter.categoryBits = 2;
 //        groundFixtureDef = new FixtureDef();
 //        groundFixtureDef.shape = groundShape;
         groundFixture = groundBody.createFixture(groundShape, 1f);
+        groundFixture.setFilterData(groundFilter);
         groundFixture.setFriction(1);
 
     }

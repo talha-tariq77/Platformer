@@ -82,7 +82,6 @@ public class GdxGame extends ApplicationAdapter {
 // camera should be in center
 
 	private void debuggingInfo() {
-		System.out.println(player.playerBody.getLinearVelocity());
 	}
 
 	private void update() {

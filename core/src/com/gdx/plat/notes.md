@@ -60,3 +60,5 @@ friction fixtures
 
 
 contact filtering removes some contacts from consideration in contact listener
+
+contacts created on this basis

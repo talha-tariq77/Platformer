@@ -1,6 +1,7 @@
 package com.gdx.plat;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
+import com.badlogic.gdx.physics.box2d.Filter;
 
 
 public class Player {
@@ -12,6 +13,7 @@ public class Player {
     float maxSpeed = 15f;
     boolean NO_X_MOVE;
     boolean STUN = false;
+    Filter testFilter;
 
     boolean moving;
 
@@ -32,6 +34,9 @@ public class Player {
 //        playerFixtureDef.friction = 10f;
 
         playerFixture = playerBody.createFixture(playerFixtureDef);
+        testFilter = new Filter();
+        testFilter.categoryBits = 1;
+        playerFixture.setFilterData(testFilter);
 
         moving = false;
     }
