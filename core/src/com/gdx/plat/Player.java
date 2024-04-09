@@ -11,8 +11,8 @@ public class Player {
     FixtureDef playerFixtureDef;
     Fixture playerFixture;
     float maxSpeed = 15f;
-    boolean NO_X_MOVE;
-    boolean STUN = false;
+    boolean NO_X_MOVE = false;
+    boolean STUN = true;
     Filter testFilter;
 
     boolean moving;
@@ -34,6 +34,9 @@ public class Player {
 //        playerFixtureDef.friction = 10f;
 
         playerFixture = playerBody.createFixture(playerFixtureDef);
+
+        playerFixture.setUserData(this);
+
         testFilter = new Filter();
         testFilter.categoryBits = 1;
         playerFixture.setFilterData(testFilter);
@@ -42,10 +45,15 @@ public class Player {
     }
 
     public void moveX(int DirectionX) {
+        System.out.println("Called");
 //        playerBody.applyForceToCenter(10f * DirectionX, 0f, true);
-        if (!NO_X_MOVE || STUN) {
+        if (!NO_X_MOVE && !STUN) {
             playerBody.applyLinearImpulse(new Vector2(maxSpeed * DirectionX, 0f), playerBody.getWorldCenter(),true);
         }
+    }
+
+    public void test() {
+        System.out.println(5);
     }
 
 

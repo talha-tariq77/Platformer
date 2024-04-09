@@ -37,14 +37,14 @@ public class GdxGame extends ApplicationAdapter {
 		world = new World(new Vector2(0, Globals.GRAVITY), true);
 		Listener contactListener = new Listener();
 		world.setContactListener(contactListener);
+		ground = new Ground();
 
-		camera.position.set(Globals.VIEWPORT_WIDTH/2F, Globals.VIEWPORT_HEIGHT/2F, 0);
+		camera.position.set(0, Globals.VIEWPORT_HEIGHT / 2, 0);
 
 		player = new Player(2, 5 + 1.7f + 2f);
 
 		// h h of world + player height
 
-		ground = new Ground();
 
 //		System.out.println(ground.groundBody.getWorldPoint(ground.groundBody.getLocalCenter()));
 

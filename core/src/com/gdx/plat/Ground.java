@@ -10,11 +10,11 @@ public class Ground {
     Filter groundFilter;
 
     int groundLength = 10000;
-    int groundHeight = 5;
+    float groundHeight = 0.5f;
 //    FixtureDef groundFixtureDef;
 
     Ground() {
-        groundBodyDef.position.set(0,0);
+        groundBodyDef.position.set(0,groundHeight);
         groundBody = GdxGame.world.createBody(groundBodyDef);
 
         groundShape.setAsBox(groundLength, groundHeight);
@@ -24,6 +24,7 @@ public class Ground {
 //        groundFixtureDef = new FixtureDef();
 //        groundFixtureDef.shape = groundShape;
         groundFixture = groundBody.createFixture(groundShape, 1f);
+        groundFixture.setUserData(this);
         groundFixture.setFilterData(groundFilter);
         groundFixture.setFriction(1);
 
