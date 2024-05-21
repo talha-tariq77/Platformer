@@ -1,4 +1,5 @@
 package com.gdx.plat;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 
 public class Ground {
@@ -14,19 +15,22 @@ public class Ground {
 //    FixtureDef groundFixtureDef;
 
     Ground() {
-        groundBodyDef.position.set(0,groundHeight);
+        groundBodyDef.position.set(groundLength/2f,groundHeight/2f);
+        groundBodyDef.type = BodyDef.BodyType.StaticBody;
         groundBody = GdxGame.world.createBody(groundBodyDef);
 
         groundShape.setAsBox(groundLength, groundHeight);
         groundBody.createFixture(groundShape, 0f);
         groundFilter = new Filter();
-        groundFilter.categoryBits = 2;
+        groundFilter.categoryBits = Globals.GROUND_BIT;
 //        groundFixtureDef = new FixtureDef();
 //        groundFixtureDef.shape = groundShape;
         groundFixture = groundBody.createFixture(groundShape, 1f);
         groundFixture.setUserData(this);
         groundFixture.setFilterData(groundFilter);
         groundFixture.setFriction(1);
+
+        System.out.println(groundBody.getWorldPoint(new Vector2(0f, 0f)));
 
     }
 }

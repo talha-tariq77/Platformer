@@ -10,12 +10,17 @@ public class Player {
     PolygonShape hitBox;
     FixtureDef playerFixtureDef;
     Fixture playerFixture;
-    float maxSpeed = 15f;
+
+    float maxSpeed = 10f;
     boolean NO_X_MOVE = false;
-    boolean STUN = true;
+    boolean STUN = false;
+    boolean xMove = false;
     Filter testFilter;
+    float airborneMaxSpeed = 0.75f * maxSpeed;
 
     boolean moving;
+
+    boolean airborne;
 
     Player(float posX, float posY) {
         playerBodyDef = new BodyDef();
@@ -30,25 +35,56 @@ public class Player {
         hitBox.setAsBox(Globals.PLAYER_WIDTH, Globals.PLAYER_HEIGHT);
         playerFixtureDef = new FixtureDef();
         playerFixtureDef.shape = hitBox;
+        playerFixtureDef.density = 6f;
+        playerFixtureDef.restitution = 0f;
+        playerFixtureDef.friction = 0f;
 //        playerFixture.setDensity(1f);
 //        playerFixtureDef.friction = 10f;
 
         playerFixture = playerBody.createFixture(playerFixtureDef);
-
         playerFixture.setUserData(this);
 
         testFilter = new Filter();
-        testFilter.categoryBits = 1;
+        testFilter.categoryBits = Globals.PLAYER_BIT;
         playerFixture.setFilterData(testFilter);
 
         moving = false;
+        airborne = false;
     }
 
     public void moveX(int DirectionX) {
-        System.out.println("Called");
+        // reimplement as the base method of the base class no-item affected, handled by the sys
+
+//        System.out.println("Called");
 //        playerBody.applyForceToCenter(10f * DirectionX, 0f, true);
-        if (!NO_X_MOVE && !STUN) {
-            playerBody.applyLinearImpulse(new Vector2(maxSpeed * DirectionX, 0f), playerBody.getWorldCenter(),true);
+        if ((playerBody.getLinearVelocity().x < 0 && DirectionX > 0) || (playerBody.getLinearVelocity().x > 0 && DirectionX < 0)) {
+            playerBody.setLinearVelocity(0f, playerBody.getLinearVelocity().y);
+        }
+        float speedCap;
+        if (airborne) {
+            speedCap = airborneMaxSpeed;
+        }
+        else {
+            speedCap = maxSpeed;
+        }
+
+        playerBody.applyLinearImpulse(new Vector2(speedCap * DirectionX * playerFixture.getDensity(), 0f), playerBody.getWorldCenter(),true);
+
+        if (playerBody.getLinearVelocity().x > speedCap) {
+            playerBody.setLinearVelocity(speedCap, playerBody.getLinearVelocity().y);
+        }
+        else if (playerBody.getLinearVelocity().x < -speedCap) {
+            playerBody.setLinearVelocity(-speedCap, playerBody.getLinearVelocity().y);
+        }
+    }
+    public void xStationary() {
+        playerBody.setLinearVelocity(0f, playerBody.getLinearVelocity().y);
+    }
+
+    public void jump() {
+        if (!airborne) {
+            playerBody.applyLinearImpulse(new Vector2(0, 210f*3f), playerBody.getWorldCenter(), true);
+            airborne = true;
         }
     }
 
@@ -58,12 +94,12 @@ public class Player {
 
 
     public void update() {
-        if (playerBody.getLinearVelocity().x > maxSpeed) {
-            playerBody.setLinearVelocity(maxSpeed, playerBody.getLinearVelocity().y);
-        }
-        else if (playerBody.getLinearVelocity().x < -maxSpeed) {
-            playerBody.setLinearVelocity(-maxSpeed, playerBody.getLinearVelocity().y);
-        }
+//        if (playerBody.getLinearVelocity().x > maxSpeed) {
+//            playerBody.setLinearVelocity(maxSpeed, playerBody.getLinearVelocity().y);
+//        }
+//        else if (playerBody.getLinearVelocity().x < -maxSpeed) {
+//            playerBody.setLinearVelocity(-maxSpeed, playerBody.getLinearVelocity().y);
+//        }
 
     }
 
