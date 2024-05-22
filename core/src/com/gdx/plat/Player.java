@@ -11,7 +11,7 @@ public class Player {
     FixtureDef playerFixtureDef;
     Fixture playerFixture;
 
-    float maxSpeed = 10f;
+    float maxSpeed = 5f;
     boolean NO_X_MOVE = false;
     boolean STUN = false;
     boolean xMove = false;
@@ -32,7 +32,7 @@ public class Player {
 //        playerBody.setLinearDamping(100f);
 
         hitBox = new PolygonShape();
-        hitBox.setAsBox(Globals.PLAYER_WIDTH, Globals.PLAYER_HEIGHT);
+        hitBox.setAsBox(Globals.PLAYER_WIDTH/2f, Globals.PLAYER_HEIGHT/2f);
         playerFixtureDef = new FixtureDef();
         playerFixtureDef.shape = hitBox;
         playerFixtureDef.density = 6f;
@@ -83,7 +83,7 @@ public class Player {
 
     public void jump() {
         if (!airborne) {
-            playerBody.applyLinearImpulse(new Vector2(0, 210f*3f), playerBody.getWorldCenter(), true);
+            playerBody.applyLinearImpulse(new Vector2(0, 125f), playerBody.getWorldCenter(), true);
             airborne = true;
         }
     }

@@ -11,7 +11,7 @@ public class Ground {
     Filter groundFilter;
 
     int groundLength = 10000;
-    float groundHeight = 0.5f;
+    float groundHeight = 1f;
 //    FixtureDef groundFixtureDef;
 
     Ground() {
@@ -19,7 +19,7 @@ public class Ground {
         groundBodyDef.type = BodyDef.BodyType.StaticBody;
         groundBody = GdxGame.world.createBody(groundBodyDef);
 
-        groundShape.setAsBox(groundLength, groundHeight);
+        groundShape.setAsBox(groundLength/2f, groundHeight/2f);
         groundBody.createFixture(groundShape, 0f);
         groundFilter = new Filter();
         groundFilter.categoryBits = Globals.GROUND_BIT;

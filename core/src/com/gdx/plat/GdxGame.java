@@ -4,7 +4,10 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.physics.box2d.*;
@@ -21,6 +24,10 @@ public class GdxGame extends ApplicationAdapter {
 
 	Player player;
 
+	TextureAtlas atlas;
+	Animation<TextureRegion> animation;
+	float stateTime;
+
 	boolean cameraFollow;
 //	Ball ball2;
 //	Ball ball3;
@@ -31,6 +38,10 @@ public class GdxGame extends ApplicationAdapter {
 		batch = new SpriteBatch();
 		camera = new OrthographicCamera();
 
+		atlas = new TextureAtlas(Gdx.files.internal("testing/testingatlas.atlas"));
+
+		animation = new Animation<TextureRegion>(1/8f, atlas.findRegions("idle"), Animation.PlayMode.NORMAL);
+//		System.out.println(animation.getKeyFrames().length);
 		int w = Gdx.graphics.getWidth();
 		int h = Gdx.graphics.getHeight();
 
@@ -43,15 +54,15 @@ public class GdxGame extends ApplicationAdapter {
 
 		camera.position.set(0, Globals.VIEWPORT_HEIGHT / 2, 0);
 // 5 + 1.7f + 2f
-		player = new Player(0f, 1f + Globals.PLAYER_HEIGHT);
+		player = new Player(0f, 0f + Globals.PLAYER_HEIGHT);
 
 
 		debugRenderer = new Box2DDebugRenderer();
 		cameraFollow = false;
+		stateTime = 0f;
 	}
 
 	public void updateCamera() {
-
 		if (player.playerBody.isAwake()) {
 //			float extreme_x = player.playerBody.getWorldPoint(new Vector2(Globals.PLAYER_WIDTH/2f, 0f)).x;
 			if (player.playerBody.getWorldCenter().x > camera.position.x && cameraFollow) {
@@ -60,11 +71,17 @@ public class GdxGame extends ApplicationAdapter {
 		}
 	}
 
+	private void debuggingInfo() {
+	}
+
 	@Override
 	public void render () {
 		handleInput();
 		update();
 		updateCamera();
+		stateTime += Gdx.graphics.getDeltaTime();
+
+		TextureRegion frame = animation.getKeyFrame(stateTime, true);
 
 
 		ScreenUtils.clear(0, 0, 0, 0);
@@ -73,6 +90,8 @@ public class GdxGame extends ApplicationAdapter {
 		batch.setProjectionMatrix(camera.combined);
 
 		batch.begin();
+		batch.draw(frame, player.playerBody.getWorldCenter().x - Globals.PLAYER_WIDTH/2f - Globals.SKIN_WIDTH/2f, player.playerBody.getWorldCenter().y - Globals.PLAYER_HEIGHT/2f - Globals.SKIN_HEIGHT/2f,
+				Globals.PLAYER_WIDTH + Globals.SKIN_WIDTH, Globals.PLAYER_HEIGHT + Globals.SKIN_HEIGHT);
 		batch.end();
 
 
@@ -81,15 +100,26 @@ public class GdxGame extends ApplicationAdapter {
 	}
 // camera should be in center
 
-	private void debuggingInfo() {
-		System.out.println(player.playerBody.getLinearVelocity().x);
-	}
+
 
 	private void update() {
 		player.update();
 	}
 	private void handleInput() {
-//		System.out.println(ball1.ballBody.getLinearVelocity());
+		float move_diff = 0.05f;
+		if (Gdx.input.isKeyPressed(Input.Keys.O)) {
+			move_diff += 0.05f;
+//			System.out.println("move diff");
+//			System.out.println((float) move_diff);
+		}
+		else if (Gdx.input.isKeyPressed(Input.Keys.P)) {
+			move_diff -= 0.05f;
+//			System.out.println("move diff");
+//			System.out.println((float) move_diff);
+		}
+		if (Gdx.input.isKeyJustPressed(Input.Keys.F))
+			cameraFollow = !cameraFollow;
+
 		if (Gdx.input.isKeyPressed(Input.Keys.R)) {
 			camera.zoom += 0.02;
 		}
@@ -97,16 +127,16 @@ public class GdxGame extends ApplicationAdapter {
 			camera.zoom -= 0.02;
 		}
 		if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-			camera.translate(-1, 0);
+			camera.translate(-move_diff, 0);
 		}
 		else if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-			camera.translate(1, 0);
+			camera.translate(move_diff, 0);
 		}
 		if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
-			camera.translate(0, 1);
+			camera.translate(0, move_diff);
 		}
 		else if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
-			camera.translate(0, -1);
+			camera.translate(0, -move_diff);
 		}
 //		if (Gdx.input.isKeyPressed(Input.Keys.D)) {
 //			ball1.ballBody.applyForceToCenter( new Vector2(1, 0), true);
