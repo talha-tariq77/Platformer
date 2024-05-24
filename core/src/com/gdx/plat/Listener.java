@@ -34,12 +34,6 @@ public class Listener implements ContactListener {
             // fixtureA always has the higher category bits value
             case (Globals.GROUND_BIT | Globals.PLAYER_BIT) :
                 ((Player) fixtureB.getUserData()).airborne = false;
-                if (fixtureB.getBody().getLinearVelocity().x > 0) {
-                    ((Player) fixtureB.getUserData()).moveX(1);
-                }
-                else if (fixtureB.getBody().getLinearVelocity().x < 0) {
-                    ((Player) fixtureB.getUserData()).moveX(-1);
-                }
                 System.out.println("landed");
                 break;
 //            case (1 | 4):
@@ -82,11 +76,43 @@ public class Listener implements ContactListener {
 
     @Override
     public void preSolve(Contact contact, Manifold oldManifold) {
+//        Fixture fixtureA = contact.getFixtureA();
+//        Fixture fixtureB = contact.getFixtureB();
+//        short catA = fixtureA.getFilterData().categoryBits;
+//        short catB = fixtureB.getFilterData().categoryBits;
+////        short tmp;
+//        if (catB > catA) {
+//            fixtureA = fixtureB;
+//            fixtureB = contact.getFixtureA();
+//        }
 
     }
 
     @Override
     public void postSolve(Contact contact, ContactImpulse impulse) {
+        // use to handle collision impulse results
+
+        Fixture fixtureA = contact.getFixtureA();
+        Fixture fixtureB = contact.getFixtureB();
+        short catA = fixtureA.getFilterData().categoryBits;
+        short catB = fixtureB.getFilterData().categoryBits;
+//        short tmp;
+        if (catB > catA) {
+            fixtureA = fixtureB;
+            fixtureB = contact.getFixtureA();
+        }
+
+        int categoryOr = catB | catA;
+
+        switch(categoryOr) {
+            case (Globals.GROUND_BIT | Globals.PLAYER_BIT):
+                if (fixtureB.getBody().getLinearVelocity().x > 0) {
+                    ((Player) fixtureB.getUserData()).moveX(1);
+                }
+                else if (fixtureB.getBody().getLinearVelocity().x < 0) {
+                    ((Player) fixtureB.getUserData()).moveX(-1);
+                }
+        }
 
     }
 }

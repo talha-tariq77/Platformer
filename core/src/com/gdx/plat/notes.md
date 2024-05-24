@@ -178,3 +178,43 @@ https://box2d.org/documentation/md__d_1__git_hub_box2d_docs_collision.html#autot
 
 use skin only for player (?)
 
+
+not animating hitbox with animation
+just doing right hitbox at right time in animation
+
+uses a lot of circles
+or elongated circles (i.e. rectangles with perfectly smooth corners)
+
+
+animating without animation class,
+to access directly animation timings?
+
+getKeyFrameIndex
+
+hitbox generation
+sensors/shapes?
+
+storing generation instructions?
+each attack would have the hitbox generation in it's class
+some way to generate each hitbox after each time interval
+
+e.g.
+0.25ths of the animation - nothing
+0.25-0.5 - x hitbox
+0.5 - 0.75 - y hitbox
+0.75 - 1 - nothing
+
+can do:
+each attacker class has texture regions
+animation class
+animationMaxFrames
+
+for keyframes x-y create shape/fixture(sensor) z
+for keyframes a-b create shape/fixture(sensor) c
+
+when in a different keyframe delete previous shape/fixture
+call for each attacker class method
+
+
+will figure out world feel later
+

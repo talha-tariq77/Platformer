@@ -24,7 +24,7 @@ public class GdxGame extends ApplicationAdapter {
 
 	Player player;
 
-	TextureAtlas atlas;
+	public static TextureAtlas atlas;
 	Animation<TextureRegion> animation;
 	float stateTime;
 
@@ -38,7 +38,7 @@ public class GdxGame extends ApplicationAdapter {
 		batch = new SpriteBatch();
 		camera = new OrthographicCamera();
 
-		atlas = new TextureAtlas(Gdx.files.internal("testing/testingatlas.atlas"));
+		atlas = new TextureAtlas(Gdx.files.internal("animations/animations_packed.atlas"));
 
 		animation = new Animation<TextureRegion>(1/8f, atlas.findRegions("idle"), Animation.PlayMode.NORMAL);
 //		System.out.println(animation.getKeyFrames().length);
@@ -72,6 +72,7 @@ public class GdxGame extends ApplicationAdapter {
 	}
 
 	private void debuggingInfo() {
+		System.out.println(player.playerBody.getLinearVelocity());
 	}
 
 	@Override
@@ -81,7 +82,7 @@ public class GdxGame extends ApplicationAdapter {
 		updateCamera();
 		stateTime += Gdx.graphics.getDeltaTime();
 
-		TextureRegion frame = animation.getKeyFrame(stateTime, true);
+		TextureRegion frame = player.currAnimation.getKeyFrame(stateTime, true);
 
 
 		ScreenUtils.clear(0, 0, 0, 0);
