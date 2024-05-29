@@ -1,5 +1,6 @@
 package com.gdx.plat;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.physics.box2d.*;
 
 public class Listener implements ContactListener {
@@ -33,7 +34,7 @@ public class Listener implements ContactListener {
         switch (categoryOr) {
             // fixtureA always has the higher category bits value
             case (Globals.GROUND_BIT | Globals.PLAYER_BIT) :
-                ((Player) fixtureB.getUserData()).airborne = false;
+                ((Player) fixtureB.getUserData()).updateState(Player.State.NO_STATE);
                 System.out.println("landed");
                 break;
 //            case (1 | 4):
@@ -66,7 +67,7 @@ public class Listener implements ContactListener {
         switch (categoryOr) {
             // fixtureA always has the higher category bits value
             case (Globals.GROUND_BIT | Globals.PLAYER_BIT) :
-                ((Player) fixtureB.getUserData()).airborne = true;
+                ((Player) fixtureB.getUserData()).updateState(Player.State.AIRBORNE);
                 break;
             case (1 | 4):
                 System.out.println("bye");
@@ -102,16 +103,17 @@ public class Listener implements ContactListener {
             fixtureB = contact.getFixtureA();
         }
 
+
         int categoryOr = catB | catA;
 
         switch(categoryOr) {
             case (Globals.GROUND_BIT | Globals.PLAYER_BIT):
-                if (fixtureB.getBody().getLinearVelocity().x > 0) {
-                    ((Player) fixtureB.getUserData()).moveX(1);
-                }
-                else if (fixtureB.getBody().getLinearVelocity().x < 0) {
-                    ((Player) fixtureB.getUserData()).moveX(-1);
-                }
+//                if (fixtureB.getBody().getLinearVelocity().x > 0) {
+//                    ((Player) fixtureB.getUserData()).moveX(1);
+//                }
+//                else if (fixtureB.getBody().getLinearVelocity().x < 0) {
+//                    ((Player) fixtureB.getUserData()).moveX(-1);
+//                }
         }
 
     }

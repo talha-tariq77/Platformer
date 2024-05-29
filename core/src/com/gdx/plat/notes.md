@@ -218,3 +218,81 @@ call for each attacker class method
 
 will figure out world feel later
 
+## asset manager
+
+Caution: don’t make your AssetManager or any other resources (like Texture, etc.) static, unless you properly manage them.
+
+This will cause problems on Android because the life-cycle of the static variable is not necessarily the same as the life-cycle of your application. Therefore the AssetManager instance of a previous instance of your application might be used for the next instance, while the resources are no longer valid. This typically would cause black/missing textures or incorrect assets.
+
+Dont make assets/asset managers static
+
+
+mipmaps:
+textures, when squeezed into a small space, can get messed up and end up the wrong colour
+
+to avoid this, and save performance, mipmaps are lower resolution and smaller versions of textures, to be used when
+things are far away or blurred out
+
+saves processing power
+
+
+asset manager can load:
+texture atlases
+
+can make one,
+which can presumably load any (?) class (animations?)
+
+
+must be in GdxGame (center, single use), non-static
+
+interpolation:
+
+smoothly transitioning between values
+
+e.g.
+in fixture generation
+interpolating between fixture states
+i.e. slowly adding more fixtures/increasing size of fixtures
+
+rather than abruptly creating multiple large fixtures
+
+
+Images in the same directory go on the same set of pages. If all images fit on a single page, no subdirectories should be used because with one page the app will only ever perform one texture bind.
+
+
+texture atlas too big to pass
+
+java is pass by value
+
+create a receiver on class
+
+generate the TextureRegions and put them directly into the class
+
+from main
+
+figure out ECS later
+
+could have rendering, animations seperate from each other + from the obj class
+using VMC
+but for now will mix
+
+may be constrained by cross-platform
+
+
+Composition vs inheritance
+
+Prefer composition over inheritance as it is more malleable / easy to modify later, but do not use a compose-always approach. With composition, it's easy to change behavior on the fly with Dependency Injection / Setters. Inheritance is more rigid as most languages do not allow you to derive from more than one type. So the goose is more or less cooked once you derive from TypeA.
+
+
+
+Does TypeB want to expose the complete interface (all public methods no less) of TypeA such that TypeB can be used where TypeA is expected? Indicates Inheritance.
+
+e.g. A Cessna biplane will expose the complete interface of an airplane, if not more. So that makes it fit to derive from Airplane.
+Does TypeB want only some/part of the behavior exposed by TypeA? Indicates need for Composition.
+
+e.g. A Bird may need only the fly behavior of an Airplane. In this case, it makes sense to extract it out as an interface / class / both and make it a member of both classes.
+
+
+composition is about taking the common behaviour (A has a C, B has a C), and having C be a seperate class/interface
+which both A and B then take as a member or inherit from
+

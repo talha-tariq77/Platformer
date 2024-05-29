@@ -24,13 +24,16 @@ public class GdxGame extends ApplicationAdapter {
 
 	Player player;
 
-	public static TextureAtlas atlas;
-	Animation<TextureRegion> animation;
+	public TextureAtlas atlas;
+
 	float stateTime;
 
 	boolean cameraFollow;
+	TextureRegion frame;
 //	Ball ball2;
 //	Ball ball3;
+
+	InputHandler inputHandler;
 
 
 	@Override
@@ -40,8 +43,7 @@ public class GdxGame extends ApplicationAdapter {
 
 		atlas = new TextureAtlas(Gdx.files.internal("animations/animations_packed.atlas"));
 
-		animation = new Animation<TextureRegion>(1/8f, atlas.findRegions("idle"), Animation.PlayMode.NORMAL);
-//		System.out.println(animation.getKeyFrames().length);
+		//		System.out.println(animation.getKeyFrames().length);
 		int w = Gdx.graphics.getWidth();
 		int h = Gdx.graphics.getHeight();
 
@@ -54,12 +56,51 @@ public class GdxGame extends ApplicationAdapter {
 
 		camera.position.set(0, Globals.VIEWPORT_HEIGHT / 2, 0);
 // 5 + 1.7f + 2f
-		player = new Player(0f, 0f + Globals.PLAYER_HEIGHT);
+		player = new Player(0f, 0f + Globals.PLAYER_HEIGHT, 0f);
 
+		stateTime = 0f;
+
+		player.animations.put(Player.State.ATTACKING , new ExtraAnimation<TextureRegion>(4/30f, atlas.findRegions("attack")));
+		player.looping.put(Player.State.ATTACKING, false);
+		player.callTime.put(Player.State.ATTACKING, null);
+
+		player.animations.put(Player.State.AIRBORNE_AND_ATTACKING , new ExtraAnimation<TextureRegion>(4/30f, atlas.findRegions("attack")));
+		player.looping.put(Player.State.AIRBORNE_AND_ATTACKING, false);
+		player.callTime.put(Player.State.AIRBORNE_AND_ATTACKING, null);
+
+
+		player.animations.put(Player.State.MOVING_AND_ATTACKING , new ExtraAnimation<TextureRegion>(4/30f, atlas.findRegions("attack")));
+		player.looping.put(Player.State.MOVING_AND_ATTACKING, false);
+		player.callTime.put(Player.State.MOVING_AND_ATTACKING, null);
+
+
+		player.animations.put(Player.State.AIRBORNE, new ExtraAnimation<TextureRegion>(1/8f, atlas.findRegions("jumping")));
+		player.looping.put(Player.State.AIRBORNE, true);
+		player.callTime.put(Player.State.AIRBORNE, null);
+
+		player.animations.put(Player.State.MOVING_AND_AIRBORNE, new ExtraAnimation<TextureRegion>(1/8f, atlas.findRegions("jumping")));
+		player.looping.put(Player.State.MOVING_AND_AIRBORNE, true);
+		player.callTime.put(Player.State.AIRBORNE_AND_ATTACKING, null);
+
+
+		player.animations.put(Player.State.MOVING, new ExtraAnimation<TextureRegion>(1/8f, atlas.findRegions("running")));
+		player.looping.put(Player.State.MOVING, true);
+
+		player.animations.put(Player.State.IDLE, new ExtraAnimation<TextureRegion>(1/8f, atlas.findRegions("idle")));
+		player.looping.put(Player.State.IDLE, true);
+		player.callTime.put(Player.State.IDLE, stateTime);
+
+
+		// airborne (e.g. knockback, and jumping will likely have different
+
+		// make animations require one for each state ?
 
 		debugRenderer = new Box2DDebugRenderer();
 		cameraFollow = false;
-		stateTime = 0f;
+		// build a custom animations class
+
+		inputHandler = new InputHandler(player);
+		Gdx.input.setInputProcessor(inputHandler);
 	}
 
 	public void updateCamera() {
@@ -72,18 +113,60 @@ public class GdxGame extends ApplicationAdapter {
 	}
 
 	private void debuggingInfo() {
-		System.out.println(player.playerBody.getLinearVelocity());
+//		System.out.println(player.currState);
+//		System.out.println(player.animations.get(player.currState));
+//		System.out.println(player.playerBody.getLinearVelocity());
 	}
 
 	@Override
 	public void render () {
-		handleInput();
+		stateTime += Gdx.graphics.getDeltaTime();
+		handleInput(stateTime);
 		update();
 		updateCamera();
-		stateTime += Gdx.graphics.getDeltaTime();
 
-		TextureRegion frame = player.currAnimation.getKeyFrame(stateTime, true);
 
+		// Animation.isAnimationFinished() just checks if 1 singular animation has finished
+
+		// could do a combinatorial
+
+
+		if (stateTime - player.startTime >= player.animations.get(player.currState).getAnimationDuration() && player.currState == Player.State.ATTACKING) {
+			player.attacking = false;
+		}
+
+		// when non-looping state is over
+		// returns to a default, or some other state
+
+		// can call player.default
+
+		// calls player's state manager's defaulting state
+		// state manager
+		// default
+		// bool -> state
+		// state list to bools
+
+		if (player.looping.get(player.currState)) {
+			frame = player.animations.get(player.currState).getKeyFrame(stateTime - player.startTime, player.callTime.get(player.currState),
+					player.looping.get(player.currState));
+		}
+		else {
+			frame = player.animations.get(player.currState).getKeyFrame(stateTime - player.startTime, player.callTime.get(player.currState),
+					player.looping.get(player.currState));
+		}
+
+		System.out.println(player.currState);
+		System.out.printf("%s %d%n", (((TextureAtlas.AtlasRegion) frame).name), ((TextureAtlas.AtlasRegion) frame).index);
+
+
+		// getKeyFrame returns keyframe
+		// based on 0-animation duration, in seconds
+		// mapped to each frame's length
+
+//		if (player.animations.get(player.currState).isAnimationFinished(stateTime) && player.currState == Player.State.ATTACKING) {
+//			player.currState = Player.State.IDLE;
+//			player.attacking = false;
+//		}
 
 		ScreenUtils.clear(0, 0, 0, 0);
 		camera.update();
@@ -91,9 +174,17 @@ public class GdxGame extends ApplicationAdapter {
 		batch.setProjectionMatrix(camera.combined);
 
 		batch.begin();
-		batch.draw(frame, player.playerBody.getWorldCenter().x - Globals.PLAYER_WIDTH/2f - Globals.SKIN_WIDTH/2f, player.playerBody.getWorldCenter().y - Globals.PLAYER_HEIGHT/2f - Globals.SKIN_HEIGHT/2f,
-				Globals.PLAYER_WIDTH + Globals.SKIN_WIDTH, Globals.PLAYER_HEIGHT + Globals.SKIN_HEIGHT);
+		float width_scale = Globals.PLAYER_HEIGHT / frame.getRegionHeight();
+
+//		System.out.println(String.format("%s %d", frame));
+		batch.draw(frame, player.playerBody.getWorldCenter().x - Globals.PLAYER_WIDTH/2f - Globals.SKIN_WIDTH/2f - 8 * width_scale,
+				player.playerBody.getWorldCenter().y - Globals.PLAYER_HEIGHT/2f - Globals.SKIN_HEIGHT/2f,
+				frame.getRegionWidth() * width_scale, Globals.PLAYER_HEIGHT);
 		batch.end();
+
+		// am stretching to fit
+
+		// look at original size
 
 
 		world.step(1/60f, 2, 6);
@@ -106,7 +197,7 @@ public class GdxGame extends ApplicationAdapter {
 	private void update() {
 		player.update();
 	}
-	private void handleInput() {
+	private void handleInput(float deltaTime) {
 		float move_diff = 0.05f;
 		if (Gdx.input.isKeyPressed(Input.Keys.O)) {
 			move_diff += 0.05f;
@@ -143,18 +234,48 @@ public class GdxGame extends ApplicationAdapter {
 //			ball1.ballBody.applyForceToCenter( new Vector2(1, 0), true);
 //		}
 
-
+//		if (Gdx.input.isKeyJustPressed(Input.Keys.D) && !Gdx.input.isKeyJustPressed(Input.Keys.A)) {
+//
+//		}
+//		else if (Gdx.input.isKeyJustPressed(Input.Keys.A) && !Gdx.input.isKeyJustPressed(Input.Keys.D)) {
+//			player.updateState(Player.State.MOVING);
+//			player.updateAnimationCallTime(deltaTime);
+//			System.out.println("still called");
+//		}
 		if (Gdx.input.isKeyPressed(Input.Keys.D) && !Gdx.input.isKeyPressed(Input.Keys.A)) {
-			player.moveX(1);
+			if ((player.currState.bits & Player.State.MOVING.bits) == player.currState.bits) {
+				player.moveX(1);
+			}
 		}
 		else if (Gdx.input.isKeyPressed(Input.Keys.A) && !Gdx.input.isKeyPressed(Input.Keys.D)) {
-			player.moveX(-1);
+			if ((player.currState.bits & Player.State.MOVING.bits) == player.currState.bits) {
+				player.moveX(-1);
+			}
 		}
+
+//		else if (Gdx.input.isKeyPressed(Input.Keys.A) && !Gdx.input.isKeyPressed(Input.Keys.D)) {
+//			player.moveX(-1);
+//		}
 		if ((!Gdx.input.isKeyPressed(Input.Keys.A) && !Gdx.input.isKeyPressed(Input.Keys.D)) || (Gdx.input.isKeyPressed(Input.Keys.A) && Gdx.input.isKeyPressed(Input.Keys.D))) {
-			player.xStationary();
+			if (player.updateState(Player.State.IDLE)) {
+				player.updateAnimationCallTime(deltaTime);
+			}
 		}
-		if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
-			player.jump();
+//		if (Gdx.input.isKeyPressed(Input.Keys.Q)) {
+//			player.updateState(Player.State.ATTACKING);
+//			player.updateAnimationCallTime(deltaTime);
+////			player.attack();
+//		}
+
+//		if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
+//			if (player.updateState(Player.State.AIRBORNE)) {
+//				player.jump();
+//				player.updateAnimationCallTime(deltaTime);
+//			}
+//		}
+
+		if (Gdx.input.isKeyPressed(Input.Keys.L)){
+			System.out.println("stopped");
 		}
 
 //		if (player.playerBody.getLinearVelocity().y == 0) {

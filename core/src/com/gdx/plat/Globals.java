@@ -8,11 +8,15 @@ public class Globals {
 
     static float VIEWPORT_HEIGHT = 10;
 
+    static float WIDTH_FACTOR = (float) VIEWPORT_WIDTH / WINDOW_WIDTH;
+
+    static float HEIGHT_FACTOR = (float) VIEWPORT_HEIGHT / WINDOW_HEIGHT;
+
     static int GRAVITY = -10;
 
     static int GRAVITY_MULTIPLIER = 8;
     public static final float PLAYER_HEIGHT = 1.75f;
-    public static final float PLAYER_WIDTH = 0.5f;
+    public static final float PLAYER_WIDTH = 0.72916f;
 
     public static final short PLAYER_BIT = 1;
     public static final short GROUND_BIT = 2;
