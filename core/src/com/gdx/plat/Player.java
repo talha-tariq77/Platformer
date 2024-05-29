@@ -8,6 +8,7 @@ import com.badlogic.gdx.utils.Array;
 
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.Map;
 
 
 public class Player {
@@ -36,7 +37,7 @@ public class Player {
 
     public enum State {
         NO_STATE (0),
-        IDLE ( 1),
+        IDLE (1),
         MOVING (2),
         AIRBORNE (4),
         ATTACKING (8),
@@ -99,6 +100,8 @@ public class Player {
 
     EnumMap<State, EnumMap<State, State>> stateInterrupts;
 
+    HashMap<Integer, State> bitsToStateMap;
+
 
 
     Player(float posX, float posY, float deltaTime) {
@@ -141,6 +144,16 @@ public class Player {
 
         callTime = new EnumMap<State, Float>(State.class);
 
+        bitsToStateMap = new HashMap<Integer, State>();
+        bitsToStateMap.put(0, State.NO_STATE);
+        bitsToStateMap.put(1, State.IDLE);
+        bitsToStateMap.put(2, State.MOVING);
+        bitsToStateMap.put(4, State.AIRBORNE);
+        bitsToStateMap.put(12, State.AIRBORNE_AND_ATTACKING);
+        bitsToStateMap.put(10, State.MOVING_AND_ATTACKING);
+        bitsToStateMap.put(6, State.MOVING_AND_AIRBORNE);
+
+
         stateInterrupts = new EnumMap<State, EnumMap<State, State>>(State.class);
         stateInterrupts.put(State.ATTACKING, new EnumMap<State, State>(State.class));
         stateInterrupts.put(State.MOVING, new EnumMap<State, State>(State.class));
@@ -156,7 +169,7 @@ public class Player {
 
 
         stateInterrupts.get(State.MOVING).put(State.ATTACKING, State.MOVING_AND_ATTACKING);
-        stateInterrupts.get(State.MOVING).put(State.AIRBORNE, State.AIRBORNE);
+        stateInterrupts.get(State.MOVING).put(State.AIRBORNE, State.MOVING_AND_AIRBORNE);
         stateInterrupts.get(State.MOVING).put(State.IDLE, State.IDLE);
 
         stateInterrupts.get(State.AIRBORNE).put(State.MOVING, State.MOVING_AND_AIRBORNE);
@@ -182,6 +195,8 @@ public class Player {
         stateInterrupts.get(State.NO_STATE).put(State.MOVING_AND_ATTACKING, State.MOVING_AND_ATTACKING);
         stateInterrupts.get(State.NO_STATE).put(State.AIRBORNE_AND_ATTACKING, State.AIRBORNE_AND_ATTACKING);
         stateInterrupts.get(State.NO_STATE).put(State.IDLE, State.IDLE);
+
+
 
 
 
@@ -253,6 +268,7 @@ public class Player {
 
 
 
+
 //        if (currState.bits == (currState.bits & State.AIRBORNE.bits)) {
 //            switch (newState) {
 //                case
@@ -282,6 +298,14 @@ public class Player {
 //            currState = State.IDLE;
 //        }
         // can keep contiguous animation by passing on the last called from one animation to next
+    }
+
+
+    public void subtractState(Player.State state) {
+        int newBits = currState.bits & ~state.bits;
+        if (bitsToStateMap.containsKey(newBits)) {
+            currState = bitsToStateMap.get(newBits);
+        }
     }
 
     public void resetCallTime() {

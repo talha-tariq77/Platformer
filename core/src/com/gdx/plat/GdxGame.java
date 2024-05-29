@@ -256,9 +256,10 @@ public class GdxGame extends ApplicationAdapter {
 		if (Gdx.input.isKeyPressed(Input.Keys.D) && !Gdx.input.isKeyPressed(Input.Keys.A)) {
 			if ((player.currState.bits & Player.State.MOVING.bits) == player.currState.bits) {
 				player.moveX(1);
-				System.out.println("pressed detected");
+				System.out.println("MOVING D");
 			}
 		}
+
 		else if (Gdx.input.isKeyPressed(Input.Keys.A) && !Gdx.input.isKeyPressed(Input.Keys.D)) {
 			if ((player.currState.bits & Player.State.MOVING.bits) == player.currState.bits) {
 				player.moveX(-1);
