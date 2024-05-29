@@ -242,24 +242,29 @@ public class GdxGame extends ApplicationAdapter {
 //			player.updateAnimationCallTime(deltaTime);
 //			System.out.println("still called");
 //		}
-		if (Gdx.input.isKeyPressed(Input.Keys.D) && !Gdx.input.isKeyPressed(Input.Keys.A)) {
-			if ((player.currState.bits & Player.State.MOVING.bits) == player.currState.bits) {
-				player.moveX(1);
-			}
-		}
-		else if (Gdx.input.isKeyPressed(Input.Keys.A) && !Gdx.input.isKeyPressed(Input.Keys.D)) {
-			if ((player.currState.bits & Player.State.MOVING.bits) == player.currState.bits) {
-				player.moveX(-1);
-			}
-		}
+//		if (Gdx.input.isKeyPressed(Input.Keys.D) && !Gdx.input.isKeyPressed(Input.Keys.A)) {
+//			if ((player.currState.bits & Player.State.MOVING.bits) == player.currState.bits) {
+//				player.moveX(1);
+//			}
+//		}
+//		else if (Gdx.input.isKeyPressed(Input.Keys.A) && !Gdx.input.isKeyPressed(Input.Keys.D)) {
+//			if ((player.currState.bits & Player.State.MOVING.bits) == player.currState.bits) {
+//				player.moveX(-1);
+//			}
+//		}
 
 //		else if (Gdx.input.isKeyPressed(Input.Keys.A) && !Gdx.input.isKeyPressed(Input.Keys.D)) {
 //			player.moveX(-1);
 //		}
+		if (Gdx.input.isKeyPressed(Input.Keys.A) && player.xMove) {
+			player.moveX(-1);
+		}
+		else if (Gdx.input.isKeyPressed(Input.Keys.D) && player.xMove) {
+			player.moveX(1);
+		}
 		if ((!Gdx.input.isKeyPressed(Input.Keys.A) && !Gdx.input.isKeyPressed(Input.Keys.D)) || (Gdx.input.isKeyPressed(Input.Keys.A) && Gdx.input.isKeyPressed(Input.Keys.D))) {
-			if (player.updateState(Player.State.IDLE)) {
-				player.updateAnimationCallTime(deltaTime);
-			}
+			player.xStationary();
+			player.updateState(deltaTime);
 		}
 //		if (Gdx.input.isKeyPressed(Input.Keys.Q)) {
 //			player.updateState(Player.State.ATTACKING);

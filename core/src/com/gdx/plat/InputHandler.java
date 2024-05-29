@@ -16,29 +16,37 @@ public class InputHandler extends InputAdapter {
 
         switch (keyCode) {
             case Input.Keys.SPACE:
-                if (player.updateState(Player.State.AIRBORNE)) {
-                    player.jump();
-                    player.updateAnimationCallTime(deltaTime);
-                }
+//                if (player.updateState(Player.State.AIRBORNE)) {
+//                    player.jump();
+//                    player.updateAnimationCallTime(deltaTime);
+//                }
+                player.jump();
+                player.updateState(deltaTime);
                 break;
             case Input.Keys.A:
-                if (!(Gdx.input.isKeyPressed(Input.Keys.D))) {
-                    if (player.updateState(Player.State.MOVING)) {
-                        player.updateAnimationCallTime(deltaTime);
-                    }
-                }
+                player.moveX(-1);
+                player.updateState(deltaTime);
+//                if (!(Gdx.input.isKeyPressed(Input.Keys.D))) {
+//                    if (player.updateState(Player.State.MOVING)) {
+//                        player.updateAnimationCallTime(deltaTime);
+//                    }
+//                }
                 break;
             case Input.Keys.D:
-                if (!(Gdx.input.isKeyPressed(Input.Keys.A))) {
-                    if (player.updateState(Player.State.MOVING)) {
-                        player.updateAnimationCallTime(deltaTime);
-                    }
-                }
+                player.moveX(1);
+                player.updateState(deltaTime);
+//                if (!(Gdx.input.isKeyPressed(Input.Keys.A))) {
+//                    if (player.updateState(Player.State.MOVING)) {
+//                        player.updateAnimationCallTime(deltaTime);
+//                    }
+//                }
                 break;
             case Input.Keys.Q:
-                if (player.updateState(Player.State.ATTACKING)) {
-                    player.updateAnimationCallTime(deltaTime);
-                }
+                player.attack();
+                player.updateState(deltaTime);
+//                if (player.updateState(Player.State.ATTACKING)) {
+//                    player.updateAnimationCallTime(deltaTime);
+//                }
                 break;
         }
         return true;

@@ -217,7 +217,7 @@ public class Player {
 
 
     }
-    public void xStationary(float deltaTime) {
+    public void xStationary() {
         moving = false;
         playerBody.setLinearVelocity(0f, playerBody.getLinearVelocity().y);
 
@@ -235,7 +235,7 @@ public class Player {
     // can seperate updateState to attack, move, airborne
     // each one performs combinatorial checks on the bools
 
-    public boolean updateState(Player.State newState) {
+    public void updateState(float deltaTime) {
 //        switch (currState) {
 //            case ATTACKING:
 //                switch (newState) {
@@ -243,13 +243,13 @@ public class Player {
 //                }
 //            case AIRBORNE
 //        }
-        if (stateInterrupts.containsKey(currState)) {
-            if (stateInterrupts.get(currState).containsKey(newState)) {
-                currState = stateInterrupts.get(currState).get(newState);
-                return true;
-            }
-        }
-        return false;
+//        if (stateInterrupts.containsKey(currState)) {
+//            if (stateInterrupts.get(currState).containsKey(newState)) {
+//                currState = stateInterrupts.get(currState).get(newState);
+//                return true;
+//            }
+//        }
+//        return false;
 
 
 
@@ -258,29 +258,36 @@ public class Player {
 //                case
 //            }
 //        }
-//
-//        if (attacking) {
-//            if (moving) {
-//                currState = State.ATTACKING;
-//            } else if (airborne) {
-//                currState = State.ATTACKING;
-//            } else {
-//                currState = State.ATTACKING;
-//            }
-//        }
-//        else if (airborne) {
-//            if (moving)
-//                currState = State.AIRBORNE;
-//            // replace
-//            else
-//                currState = State.AIRBORNE;
-//        }
-//        else if (moving)
-//            currState = State.MOVING;
-//
-//        else {
-//            currState = State.IDLE;
-//        }
+        Player.State newState;
+        if (attacking) {
+            if (moving) {
+                newState = State.ATTACKING;
+            } else if (airborne) {
+                newState = State.ATTACKING;
+            } else {
+                newState = State.ATTACKING;
+            }
+        }
+        else if (airborne) {
+            if (moving)
+                newState = State.AIRBORNE;
+            // replace
+            else
+                newState = State.AIRBORNE;
+        }
+        else if (moving)
+            newState = State.MOVING;
+
+        else {
+            newState = State.IDLE;
+        }
+
+
+        if (newState != currState) {
+            currState = newState;
+            updateAnimationCallTime(deltaTime);
+        }
+
         // can keep contiguous animation by passing on the last called from one animation to next
     }
 
@@ -297,9 +304,11 @@ public class Player {
 //    }
 
 
-//    public void attack() {
-//        currState = State.ATTACKING;
-//    }
+    public void attack() {
+        if (!attacking) {
+            attacking = true;
+        }
+    }
 
 
     public void update() {
