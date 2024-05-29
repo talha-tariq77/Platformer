@@ -12,32 +12,32 @@ public class InputHandler extends InputAdapter {
 
     @Override
     public boolean keyDown(int keyCode) {
-        float deltaTime = Gdx.graphics.getDeltaTime();
 
         switch (keyCode) {
             case Input.Keys.SPACE:
                 if (player.updateState(Player.State.AIRBORNE)) {
                     player.jump();
-                    player.updateAnimationCallTime(deltaTime);
+                    player.resetCallTime();
                 }
                 break;
             case Input.Keys.A:
                 if (!(Gdx.input.isKeyPressed(Input.Keys.D))) {
                     if (player.updateState(Player.State.MOVING)) {
-                        player.updateAnimationCallTime(deltaTime);
+                        player.resetCallTime();
                     }
                 }
                 break;
             case Input.Keys.D:
+                System.out.println("detected keydown D");
                 if (!(Gdx.input.isKeyPressed(Input.Keys.A))) {
                     if (player.updateState(Player.State.MOVING)) {
-                        player.updateAnimationCallTime(deltaTime);
+                        player.resetCallTime();
                     }
                 }
                 break;
             case Input.Keys.Q:
                 if (player.updateState(Player.State.ATTACKING)) {
-                    player.updateAnimationCallTime(deltaTime);
+                    player.resetCallTime();
                 }
                 break;
         }

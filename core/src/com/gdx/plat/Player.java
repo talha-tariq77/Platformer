@@ -89,6 +89,8 @@ public class Player {
 //        }
 //    }
     State currState;
+
+    float currStateTime;
     EnumMap<State, Boolean> looping;
 
     EnumMap<State, Float> callTime;
@@ -132,6 +134,8 @@ public class Player {
         currState = State.IDLE;
 
         animations = new EnumMap<State, ExtraAnimation<TextureRegion>>(State.class);
+
+        currStateTime = 0f;
 
         looping = new EnumMap<State, Boolean>(State.class);
 
@@ -217,18 +221,14 @@ public class Player {
 
 
     }
-    public void xStationary(float deltaTime) {
-        moving = false;
+    public void xStationary() {
         playerBody.setLinearVelocity(0f, playerBody.getLinearVelocity().y);
 
         // update state separate into the different state setters
     }
 
     public void jump() {
-        if (!airborne) {
-            playerBody.applyLinearImpulse(new Vector2(0, 125f), playerBody.getWorldCenter(), true);
-            airborne = true;
-        }
+        playerBody.applyLinearImpulse(new Vector2(0, 125f), playerBody.getWorldCenter(), true);
     }
     // input handler calls relevant methods in the animation/state
     // and the physics handler + bool (?)
@@ -284,8 +284,8 @@ public class Player {
         // can keep contiguous animation by passing on the last called from one animation to next
     }
 
-    public void updateAnimationCallTime(float deltaTime) {
-        callTime.put(currState, deltaTime);
+    public void resetCallTime() {
+        currStateTime = 0f;
     }
 
 //    public void updateAnimationCall(float deltaTime) {
