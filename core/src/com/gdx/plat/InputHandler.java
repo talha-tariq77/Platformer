@@ -21,19 +21,17 @@ public class InputHandler extends InputAdapter {
                 }
                 break;
             case Input.Keys.A:
-                if (!(Gdx.input.isKeyPressed(Input.Keys.D))) {
-                    if (player.updateState(Player.State.MOVING)) {
-                        player.resetCallTime();
-                    }
+                if (player.updateState(Player.State.MOVING)) {
+                    player.resetCallTime();
+
                 }
                 break;
             case Input.Keys.D:
                 System.out.println("detected keydown D");
-                if (!(Gdx.input.isKeyPressed(Input.Keys.A))) {
-                    if (player.updateState(Player.State.MOVING)) {
-                        player.resetCallTime();
-                    }
+                if (player.updateState(Player.State.MOVING)) {
+                    player.resetCallTime();
                 }
+
                 break;
             case Input.Keys.Q:
                 if (player.updateState(Player.State.ATTACKING)) {

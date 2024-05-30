@@ -26,7 +26,7 @@ public class Player {
     boolean STUN = false;
     boolean xMove = false;
     Filter testFilter;
-    float airborneMaxSpeed = 0.75f * maxSpeed;
+    float airborneMaxSpeed = maxSpeed;
 
     boolean moving;
 
