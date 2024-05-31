@@ -11,7 +11,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.physics.box2d.*;
-import jdk.tools.jlink.internal.plugins.StripNativeCommandsPlugin;
+//import jdk.tools.jlink.internal.plugins.StripNativeCommandsPlugin;
 
 public class GdxGame extends ApplicationAdapter {
 	public static World world;
@@ -64,24 +64,10 @@ public class GdxGame extends ApplicationAdapter {
 		player.looping.put(Player.State.ATTACKING, false);
 		player.callTime.put(Player.State.ATTACKING, null);
 
-		player.animations.put(Player.State.AIRBORNE_AND_ATTACKING , new ExtraAnimation<TextureRegion>(4/30f, atlas.findRegions("attack")));
-		player.looping.put(Player.State.AIRBORNE_AND_ATTACKING, false);
-		player.callTime.put(Player.State.AIRBORNE_AND_ATTACKING, null);
-
-
-		player.animations.put(Player.State.MOVING_AND_ATTACKING , new ExtraAnimation<TextureRegion>(4/30f, atlas.findRegions("attack")));
-		player.looping.put(Player.State.MOVING_AND_ATTACKING, false);
-		player.callTime.put(Player.State.MOVING_AND_ATTACKING, null);
-
 
 		player.animations.put(Player.State.AIRBORNE, new ExtraAnimation<TextureRegion>(1/8f, atlas.findRegions("jumping")));
 		player.looping.put(Player.State.AIRBORNE, true);
 		player.callTime.put(Player.State.AIRBORNE, null);
-
-		player.animations.put(Player.State.MOVING_AND_AIRBORNE, new ExtraAnimation<TextureRegion>(1/8f, atlas.findRegions("jumping")));
-		player.looping.put(Player.State.MOVING_AND_AIRBORNE, true);
-		player.callTime.put(Player.State.AIRBORNE_AND_ATTACKING, null);
-
 
 		player.animations.put(Player.State.MOVING, new ExtraAnimation<TextureRegion>(1/8f, atlas.findRegions("running")));
 		player.looping.put(Player.State.MOVING, true);

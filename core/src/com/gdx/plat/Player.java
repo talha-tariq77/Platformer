@@ -39,16 +39,13 @@ public class Player {
         NO_STATE (0),
         IDLE (1),
         MOVING (2),
-        AIRBORNE (4),
-        ATTACKING (8),
-        MOVING_AND_ATTACKING (10),
-        AIRBORNE_AND_ATTACKING (12),
-        MOVING_AND_AIRBORNE (6);
+        AIRBORNE (3),
+        ATTACKING (4);
 
-        final int bits;
+        final float actionGroupIndex;
 
-        State(int bits) {
-            this.bits = bits;
+        State(float actionGroupIndex) {
+            this.actionGroupIndex = actionGroupIndex;
         }
 
 
@@ -89,7 +86,7 @@ public class Player {
 //            this.state2 = B;
 //        }
 //    }
-    State currState;
+    Array<State> currState;
 
     float currStateTime;
     EnumMap<State, Boolean> looping;
