@@ -30,6 +30,13 @@ public class InputHandler extends InputAdapter {
                 System.out.println("detected keydown D");
                 if (player.updateState(Player.State.MOVING)) {
                     player.resetCallTime();
+
+                    // here moving shouldnt return a true for MOVING_AND_ATTACKING
+                    // but in physics it should
+                    // physics does AND check i.e. is it contained
+                    // resetting and changing the animation does the
+                    // IS CHANGED check, checks if it has been changed to newState
+
                 }
 
                 break;
@@ -41,5 +48,22 @@ public class InputHandler extends InputAdapter {
         }
         return true;
     }
+    @Override
+    public boolean keyUp(int keyCode) {
+        switch (keyCode) {
+            case Input.Keys.A:
+                player.subtractState(Player.State.MOVING);
+//                player.resetCallTime();
+                break;
+
+            case Input.Keys.D:
+                player.subtractState(Player.State.MOVING);
+//                player.resetCallTime();
+                break;
+        }
+        return true;
+    }
 }
+
+// signal through static variable?
 

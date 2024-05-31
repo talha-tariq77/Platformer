@@ -149,6 +149,7 @@ public class Player {
         bitsToStateMap.put(1, State.IDLE);
         bitsToStateMap.put(2, State.MOVING);
         bitsToStateMap.put(4, State.AIRBORNE);
+        bitsToStateMap.put(8, State.ATTACKING);
         bitsToStateMap.put(12, State.AIRBORNE_AND_ATTACKING);
         bitsToStateMap.put(10, State.MOVING_AND_ATTACKING);
         bitsToStateMap.put(6, State.MOVING_AND_AIRBORNE);
@@ -164,9 +165,9 @@ public class Player {
 
 
 
-        stateInterrupts.get(State.ATTACKING).put(State.AIRBORNE, State.AIRBORNE);
+//        stateInterrupts.get(State.ATTACKING).put(State.AIRBORNE, State.AIRBORNE);
         stateInterrupts.get(State.ATTACKING).put(State.MOVING, State.MOVING_AND_ATTACKING);
-
+        // main adv of states only approach
 
         stateInterrupts.get(State.MOVING).put(State.ATTACKING, State.MOVING_AND_ATTACKING);
         stateInterrupts.get(State.MOVING).put(State.AIRBORNE, State.MOVING_AND_AIRBORNE);
@@ -196,7 +197,11 @@ public class Player {
         stateInterrupts.get(State.NO_STATE).put(State.AIRBORNE_AND_ATTACKING, State.AIRBORNE_AND_ATTACKING);
         stateInterrupts.get(State.NO_STATE).put(State.IDLE, State.IDLE);
 
+        // use grouping of states
+        // then add groups into stateInterrupts
 
+        // state - group is 1 to 1
+        // can be changed at runtime
 
 
 
@@ -258,15 +263,23 @@ public class Player {
 //                }
 //            case AIRBORNE
 //        }
+
+        // combination vs interruption
+        // if combination, only sometimes reset keyframe
+        //
+
         if (stateInterrupts.containsKey(currState)) {
             if (stateInterrupts.get(currState).containsKey(newState)) {
+
+                boolean result = stateInterrupts.get(currState).get(newState) != currState;
                 currState = stateInterrupts.get(currState).get(newState);
-                return true;
+                return result;
             }
         }
         return false;
 
 
+// subtract dont set to no state
 
 
 //        if (currState.bits == (currState.bits & State.AIRBORNE.bits)) {
@@ -300,8 +313,12 @@ public class Player {
         // can keep contiguous animation by passing on the last called from one animation to next
     }
 
+    public boolean checkStateContains(Player.State newState) {
+        return (currState.bits & newState.bits) == newState.bits;
+    }
 
     public void subtractState(Player.State state) {
+        // converts A - A -> 0 = NO_STATE
         int newBits = currState.bits & ~state.bits;
         if (bitsToStateMap.containsKey(newBits)) {
             currState = bitsToStateMap.get(newBits);
@@ -325,6 +342,15 @@ public class Player {
 //        currState = State.ATTACKING;
 //    }
 
+    public TextureRegion getFrame() {
+        if (animations.get(currState).completed) {
+            animations.get(currState).completed = false;
+            currState = State.NO_STATE;
+            resetCallTime();
+        }
+
+        return animations.get(currState).getKeyFrame(currStateTime);
+    }
 
     public void update() {
 //        if (playerBody.getLinearVelocity().x > maxSpeed) {

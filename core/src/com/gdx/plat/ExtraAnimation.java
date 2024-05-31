@@ -28,6 +28,8 @@ public class ExtraAnimation<T> {
     private int lastFrameNumber;
     private float lastStateTime;
 
+    public boolean completed;
+
     private PlayMode playMode = PlayMode.NORMAL;
 
     /** Constructor, storing the frame duration and key frames.
@@ -43,6 +45,7 @@ public class ExtraAnimation<T> {
             frames[i] = keyFrames.get(i);
         }
         setKeyFrames(frames);
+        completed = false;
     }
 
     /** Constructor, storing the frame duration and key frames.
@@ -62,6 +65,7 @@ public class ExtraAnimation<T> {
     public ExtraAnimation (float frameDuration, T... keyFrames) {
         this.frameDuration = frameDuration;
         setKeyFrames(keyFrames);
+        completed = false;
     }
 
     /** Returns a frame based on the so called state time. This is the amount of seconds an object has spent in the state this
@@ -111,7 +115,10 @@ public class ExtraAnimation<T> {
         int frameNumber = (int)(stateTime / frameDuration);
         switch (playMode) {
             case NORMAL:
-                frameNumber = Math.min(keyFrames.length - 1, frameNumber);
+                if (frameNumber >= keyFrames.length - 1) {
+                    completed = true;
+                    frameNumber = keyFrames.length - 1;
+                }
                 break;
             case LOOP:
                 frameNumber = frameNumber % keyFrames.length;

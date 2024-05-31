@@ -154,8 +154,7 @@ public class GdxGame extends ApplicationAdapter {
 		// bool -> state
 		// state list to bools
 
-		frame = player.animations.get(player.currState).getKeyFrame(player.currStateTime,
-				player.looping.get(player.currState));
+		frame = player.getFrame();
 
 //		if (player.looping.get(player.currState)) {
 //			frame = player.animations.get(player.currState).getKeyFrame(player.currStateTime,
@@ -196,6 +195,12 @@ public class GdxGame extends ApplicationAdapter {
 		// am stretching to fit
 
 		// look at original size
+
+		// sprite batch
+		// has limit on amount of sprites that can be sent to GPU in one call
+		// this can be set
+		// maxSpritesInBatch
+		// is this for sprites?
 
 
 		world.step(1/60f, 2, 6);
@@ -270,9 +275,12 @@ public class GdxGame extends ApplicationAdapter {
 //			player.moveX(-1);
 //		}
 		if ((!Gdx.input.isKeyPressed(Input.Keys.A) && !Gdx.input.isKeyPressed(Input.Keys.D)) || (Gdx.input.isKeyPressed(Input.Keys.A) && Gdx.input.isKeyPressed(Input.Keys.D))) {
+			// subtraction of moving -> no_state
 			if (player.updateState(Player.State.IDLE)) {
-				player.xStationary();
 				player.resetCallTime();
+			}
+			if (!player.checkStateContains(Player.State.MOVING)) {
+				player.xStationary();
 			}
 		}
 //		if (Gdx.input.isKeyPressed(Input.Keys.Q)) {
