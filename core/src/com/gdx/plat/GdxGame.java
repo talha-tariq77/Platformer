@@ -61,23 +61,19 @@ public class GdxGame extends ApplicationAdapter {
 		stateTime = 0f;
 
 		player.animations.put(Player.State.ATTACKING , new ExtraAnimation<TextureRegion>(4/30f, atlas.findRegions("attack")));
-		player.looping.put(Player.State.ATTACKING, false);
 		player.callTime.put(Player.State.ATTACKING, null);
 
 
 		player.animations.put(Player.State.AIRBORNE, new ExtraAnimation<TextureRegion>(1/8f, atlas.findRegions("jumping")));
-		player.looping.put(Player.State.AIRBORNE, true);
 		player.callTime.put(Player.State.AIRBORNE, null);
 
 		player.animations.put(Player.State.MOVING, new ExtraAnimation<TextureRegion>(1/8f, atlas.findRegions("running")));
 		player.looping.put(Player.State.MOVING, true);
 
 		player.animations.put(Player.State.IDLE, new ExtraAnimation<TextureRegion>(1/8f, atlas.findRegions("idle")));
-		player.looping.put(Player.State.IDLE, true);
 		player.callTime.put(Player.State.IDLE, stateTime);
 
 		player.animations.put(Player.State.NO_STATE, new ExtraAnimation<TextureRegion>(1/8f, atlas.findRegions("idle")));
-		player.looping.put(Player.State.NO_STATE, true);
 
 
 

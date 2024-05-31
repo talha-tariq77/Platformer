@@ -6,6 +6,7 @@ import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.physics.box2d.Filter;
 import com.badlogic.gdx.utils.Array;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,7 +34,7 @@ public class Player {
     boolean airborne;
     boolean attacking;
 
-    EnumMap<State, ExtraAnimation<TextureRegion>> animations;
+    HashMap<ArrayList<State>, ExtraAnimation<TextureRegion>> animations;
 
     public enum State {
         NO_STATE (0),
@@ -95,8 +96,6 @@ public class Player {
 
     float startTime;
 
-    EnumMap<State, EnumMap<State, State>> stateInterrupts;
-
     HashMap<Integer, State> bitsToStateMap;
 
 
@@ -131,13 +130,15 @@ public class Player {
         airborne = false;
         attacking = false;
 
-        currState = State.IDLE;
+        currState = new Array<>();
+        currState.add(State.IDLE);
 
-        animations = new EnumMap<State, ExtraAnimation<TextureRegion>>(State.class);
+        animations = new HashMap<ArrayList<State>, ExtraAnimation<TextureRegion>>();
 
         currStateTime = 0f;
 
-        looping = new EnumMap<State, Boolean>(State.class);
+        // hardcode if animation is looping
+
 
         callTime = new EnumMap<State, Float>(State.class);
 
@@ -147,52 +148,15 @@ public class Player {
         bitsToStateMap.put(2, State.MOVING);
         bitsToStateMap.put(4, State.AIRBORNE);
         bitsToStateMap.put(8, State.ATTACKING);
-        bitsToStateMap.put(12, State.AIRBORNE_AND_ATTACKING);
-        bitsToStateMap.put(10, State.MOVING_AND_ATTACKING);
-        bitsToStateMap.put(6, State.MOVING_AND_AIRBORNE);
 
 
-        stateInterrupts = new EnumMap<State, EnumMap<State, State>>(State.class);
-        stateInterrupts.put(State.ATTACKING, new EnumMap<State, State>(State.class));
-        stateInterrupts.put(State.MOVING, new EnumMap<State, State>(State.class));
-        stateInterrupts.put(State.AIRBORNE, new EnumMap<State, State>(State.class));
-        stateInterrupts.put(State.IDLE, new EnumMap<State, State>(State.class));
-        stateInterrupts.put(State.NO_STATE, new EnumMap<State, State>(State.class));
-        stateInterrupts.put(State.MOVING_AND_AIRBORNE, new EnumMap<State, State>(State.class));
+
 
 
 
 //        stateInterrupts.get(State.ATTACKING).put(State.AIRBORNE, State.AIRBORNE);
-        stateInterrupts.get(State.ATTACKING).put(State.MOVING, State.MOVING_AND_ATTACKING);
         // main adv of states only approach
 
-        stateInterrupts.get(State.MOVING).put(State.ATTACKING, State.MOVING_AND_ATTACKING);
-        stateInterrupts.get(State.MOVING).put(State.AIRBORNE, State.MOVING_AND_AIRBORNE);
-        stateInterrupts.get(State.MOVING).put(State.IDLE, State.IDLE);
-
-        stateInterrupts.get(State.AIRBORNE).put(State.MOVING, State.MOVING_AND_AIRBORNE);
-        stateInterrupts.get(State.AIRBORNE).put(State.NO_STATE, State.NO_STATE);
-
-        stateInterrupts.get(State.MOVING_AND_AIRBORNE).put(State.NO_STATE, State.NO_STATE);
-
-
-
-        stateInterrupts.get(State.IDLE).put(State.ATTACKING, State.ATTACKING);
-        stateInterrupts.get(State.IDLE).put(State.MOVING, State.MOVING);
-        stateInterrupts.get(State.IDLE).put(State.AIRBORNE, State.AIRBORNE);
-
-        stateInterrupts.get(State.IDLE).put(State.MOVING_AND_AIRBORNE, State.MOVING_AND_AIRBORNE);
-        stateInterrupts.get(State.IDLE).put(State.MOVING_AND_ATTACKING, State.MOVING_AND_ATTACKING);
-
-        stateInterrupts.get(State.IDLE).put(State.AIRBORNE_AND_ATTACKING, State.AIRBORNE_AND_ATTACKING);
-
-        stateInterrupts.get(State.NO_STATE).put(State.ATTACKING, State.ATTACKING);
-        stateInterrupts.get(State.NO_STATE).put(State.MOVING, State.MOVING);
-        stateInterrupts.get(State.NO_STATE).put(State.AIRBORNE, State.AIRBORNE);
-        stateInterrupts.get(State.NO_STATE).put(State.MOVING_AND_AIRBORNE, State.MOVING_AND_AIRBORNE);
-        stateInterrupts.get(State.NO_STATE).put(State.MOVING_AND_ATTACKING, State.MOVING_AND_ATTACKING);
-        stateInterrupts.get(State.NO_STATE).put(State.AIRBORNE_AND_ATTACKING, State.AIRBORNE_AND_ATTACKING);
-        stateInterrupts.get(State.NO_STATE).put(State.IDLE, State.IDLE);
 
         // use grouping of states
         // then add groups into stateInterrupts

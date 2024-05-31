@@ -32,12 +32,14 @@ public class ExtraAnimation<T> {
 
     private PlayMode playMode = PlayMode.NORMAL;
 
+    public boolean looping;
+
     /** Constructor, storing the frame duration and key frames.
      *
      * @param frameDuration the time between frames in seconds.
      * @param keyFrames the objects representing the frames. If this Array is type-aware, {@link #getKeyFrames()} can return the
      *           correct type of array. Otherwise, it returns an Object[]. */
-    public ExtraAnimation (float frameDuration, Array<? extends T> keyFrames) {
+    public ExtraAnimation (float frameDuration, Array<? extends T> keyFrames, boolean looping) {
         this.frameDuration = frameDuration;
         Class arrayType = keyFrames.items.getClass().getComponentType();
         T[] frames = (T[])ArrayReflection.newInstance(arrayType, keyFrames.size);
@@ -46,6 +48,8 @@ public class ExtraAnimation<T> {
         }
         setKeyFrames(frames);
         completed = false;
+
+        this.looping = looping;
     }
 
     /** Constructor, storing the frame duration and key frames.
@@ -53,28 +57,31 @@ public class ExtraAnimation<T> {
      * @param frameDuration the time between frames in seconds.
      * @param keyFrames the objects representing the frames. If this Array is type-aware, {@link #getKeyFrames()} can return the
      *           correct type of array. Otherwise, it returns an Object[]. */
-    public ExtraAnimation (float frameDuration, Array<? extends T> keyFrames, PlayMode playMode) {
-        this(frameDuration, keyFrames);
+    public ExtraAnimation (float frameDuration, Array<? extends T> keyFrames, PlayMode playMode, boolean looping) {
+        this(frameDuration, keyFrames, looping);
         setPlayMode(playMode);
+
+        this.looping = looping;
     }
 
     /** Constructor, storing the frame duration and key frames.
      *
      * @param frameDuration the time between frames in seconds.
      * @param keyFrames the objects representing the frames. */
-    public ExtraAnimation (float frameDuration, T... keyFrames) {
+    public ExtraAnimation (float frameDuration, boolean looping, T... keyFrames) {
         this.frameDuration = frameDuration;
         setKeyFrames(keyFrames);
         completed = false;
+
+        this.looping = looping;
     }
 
     /** Returns a frame based on the so called state time. This is the amount of seconds an object has spent in the state this
      * Animation instance represents, e.g. running, jumping and so on. The mode specifies whether the animation is looping or not.
      *
      * @param stateTime the time spent in the state represented by this animation.
-     * @param looping whether the animation is looping or not.
      * @return the frame of animation for the given state time. */
-    public T getKeyFrame (float stateTime, boolean looping) {
+    public T getKeyFrame (float stateTime) {
         // we set the play mode by overriding the previous mode based on looping
         // parameter value
         PlayMode oldPlayMode = playMode;
@@ -89,8 +96,9 @@ public class ExtraAnimation<T> {
             else
                 playMode = PlayMode.LOOP;
         }
+        int frameNumber = getKeyFrameIndex(stateTime);
 
-        T frame = getKeyFrame(stateTime);
+        T frame = keyFrames[frameNumber];;
         playMode = oldPlayMode;
         return frame;
     }
@@ -101,10 +109,6 @@ public class ExtraAnimation<T> {
      *
      * @param stateTime
      * @return the frame of animation for the given state time. */
-    public T getKeyFrame (float stateTime) {
-        int frameNumber = getKeyFrameIndex(stateTime);
-        return keyFrames[frameNumber];
-    }
 
     /** Returns the current frame number.
      * @param stateTime
