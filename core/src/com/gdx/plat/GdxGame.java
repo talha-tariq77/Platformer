@@ -4,19 +4,20 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.g2d.Animation;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.physics.box2d.*;
-import jdk.tools.jlink.internal.plugins.StripNativeCommandsPlugin;
+
+import java.util.*;
+import java.util.stream.Stream;
 
 public class GdxGame extends ApplicationAdapter {
 	public static World world;
 	SpriteBatch batch;
 	OrthographicCamera camera;
+
+	OrthographicCamera debugging;
 	Box2DDebugRenderer debugRenderer;
 
 	public static Ground ground;
@@ -35,11 +36,16 @@ public class GdxGame extends ApplicationAdapter {
 
 	InputHandler inputHandler;
 
+	BitmapFont font;
+
+
 
 	@Override
 	public void create () {
 		batch = new SpriteBatch();
 		camera = new OrthographicCamera();
+
+		debugging = new OrthographicCamera();
 
 		atlas = new TextureAtlas(Gdx.files.internal("animations/animations_packed.atlas"));
 
@@ -48,6 +54,7 @@ public class GdxGame extends ApplicationAdapter {
 		int h = Gdx.graphics.getHeight();
 
 		camera.setToOrtho(false, Globals.VIEWPORT_WIDTH, Globals.VIEWPORT_HEIGHT);
+		debugging.setToOrtho(false, Globals.VIEWPORT_WIDTH, Globals.VIEWPORT_HEIGHT);
 
 		world = new World(new Vector2(0, Globals.GRAVITY * Globals.GRAVITY_MULTIPLIER), true);
 		Listener contactListener = new Listener();
@@ -60,36 +67,29 @@ public class GdxGame extends ApplicationAdapter {
 
 		stateTime = 0f;
 
-		player.animations.put(Player.State.ATTACKING , new ExtraAnimation<TextureRegion>(4/30f, atlas.findRegions("attack")));
-		player.looping.put(Player.State.ATTACKING, false);
-		player.callTime.put(Player.State.ATTACKING, null);
 
-		player.animations.put(Player.State.AIRBORNE_AND_ATTACKING , new ExtraAnimation<TextureRegion>(4/30f, atlas.findRegions("attack")));
-		player.looping.put(Player.State.AIRBORNE_AND_ATTACKING, false);
-		player.callTime.put(Player.State.AIRBORNE_AND_ATTACKING, null);
+		player.animations.put(player.getTotal(List.of(Player.State.ATTACKING)), new ExtraAnimation<TextureRegion>(2/4f, atlas.findRegions("attack"), false));
 
 
-		player.animations.put(Player.State.MOVING_AND_ATTACKING , new ExtraAnimation<TextureRegion>(4/30f, atlas.findRegions("attack")));
-		player.looping.put(Player.State.MOVING_AND_ATTACKING, false);
-		player.callTime.put(Player.State.MOVING_AND_ATTACKING, null);
+		player.animations.put(player.getTotal(List.of(Player.State.ATTACKING, Player.State.AIRBORNE)), new ExtraAnimation<TextureRegion>(4/30f, atlas.findRegions("attack"), false));
 
 
-		player.animations.put(Player.State.AIRBORNE, new ExtraAnimation<TextureRegion>(1/8f, atlas.findRegions("jumping")));
-		player.looping.put(Player.State.AIRBORNE, true);
-		player.callTime.put(Player.State.AIRBORNE, null);
-
-		player.animations.put(Player.State.MOVING_AND_AIRBORNE, new ExtraAnimation<TextureRegion>(1/8f, atlas.findRegions("jumping")));
-		player.looping.put(Player.State.MOVING_AND_AIRBORNE, true);
-		player.callTime.put(Player.State.AIRBORNE_AND_ATTACKING, null);
+		player.animations.put(player.getTotal(List.of(Player.State.ATTACKING, Player.State.MOVING)), new ExtraAnimation<TextureRegion>(2/4f, atlas.findRegions("attack"), false));
+		player.animations.put(player.getTotal(List.of(Player.State.AIRBORNE,Player.State.MOVING, Player.State.ATTACKING)), new ExtraAnimation<TextureRegion>(2/4f, atlas.findRegions("attack"), false));
 
 
-		player.animations.put(Player.State.MOVING, new ExtraAnimation<TextureRegion>(1/8f, atlas.findRegions("running")));
-		player.looping.put(Player.State.MOVING, true);
+		player.animations.put(player.getTotal(List.of(Player.State.AIRBORNE)), new ExtraAnimation<TextureRegion>(1/8f, atlas.findRegions("jumping"), false));
 
-		player.animations.put(Player.State.IDLE, new ExtraAnimation<TextureRegion>(1/8f, atlas.findRegions("idle")));
-		player.looping.put(Player.State.IDLE, true);
-		player.callTime.put(Player.State.IDLE, stateTime);
 
+		player.animations.put(player.getTotal(List.of(Player.State.AIRBORNE,Player.State.MOVING)), new ExtraAnimation<TextureRegion>(1/8f, atlas.findRegions("jumping"), false));
+
+		player.animations.put(player.getTotal(List.of(Player.State.MOVING)), new ExtraAnimation<TextureRegion>(1/8f, atlas.findRegions("running"), true));
+
+
+		player.animations.put(player.getTotal(List.of(Player.State.IDLE)), new ExtraAnimation<TextureRegion>(1/8f, atlas.findRegions("idle"), true));
+
+
+		player.animations.put(0, new ExtraAnimation<TextureRegion>(1/8f, atlas.findRegions("idle"), true));
 
 		// airborne (e.g. knockback, and jumping will likely have different
 
@@ -101,13 +101,16 @@ public class GdxGame extends ApplicationAdapter {
 
 		inputHandler = new InputHandler(player);
 		Gdx.input.setInputProcessor(inputHandler);
+
+		font = new BitmapFont(Gdx.files.internal("default.fnt"));
+		font.getData().setScale(0.1f);
 	}
 
-	public void updateCamera() {
+	public void updateCamera(OrthographicCamera orthographicCamera) {
 		if (player.playerBody.isAwake()) {
 //			float extreme_x = player.playerBody.getWorldPoint(new Vector2(Globals.PLAYER_WIDTH/2f, 0f)).x;
-			if (player.playerBody.getWorldCenter().x > camera.position.x && cameraFollow) {
-				camera.position.set(player.playerBody.getWorldCenter().x, camera.position.y, camera.position.z);
+			if (player.playerBody.getWorldCenter().x > orthographicCamera.position.x && cameraFollow) {
+				orthographicCamera.position.set(player.playerBody.getWorldCenter().x, orthographicCamera.position.y, orthographicCamera.position.z);
 			}
 		}
 	}
@@ -123,7 +126,8 @@ public class GdxGame extends ApplicationAdapter {
 		stateTime += Gdx.graphics.getDeltaTime();
 		handleInput(stateTime);
 		update();
-		updateCamera();
+		updateCamera(camera);
+
 
 
 		// Animation.isAnimationFinished() just checks if 1 singular animation has finished
@@ -131,9 +135,33 @@ public class GdxGame extends ApplicationAdapter {
 		// could do a combinatorial
 
 
-		if (stateTime - player.startTime >= player.animations.get(player.currState).getAnimationDuration() && player.currState == Player.State.ATTACKING) {
-			player.attacking = false;
+//		if (stateTime - player.startTime >= player.animations.get(player.currState).getAnimationDuration() && player.currState == Player.State.ATTACKING) {
+//			player.attacking = false;
+//		}
+
+		player.currStateTime += Gdx.graphics.getDeltaTime();
+
+
+		if (!player.animations.containsKey(player.getTotal(player.currOneTime) + player.getTotal(player.currState))) {
+			System.out.println("no");
 		}
+		if (!player.currOneTime.isEmpty() && player.animations.get(player.getTotal(player.currOneTime) + player.getTotal(player.currState)).completed) {
+			player.animations.get(player.getTotal(player.currState) + player.getTotal(player.currOneTime)).completed = false;
+			player.stateBools.put(player.currOneTime.get(player.currOneTime.size() - 1), false);
+
+//			int i = 0;
+////			while (i < player.currOneTime.size()) {
+//////				if (player.animations.get(player.getTotal(List.of(player.currOneTime.get(i)))).completed) {
+//////					player.stateBools.put(player.currOneTime.get(i), false);
+//////				}
+//////				i++;
+////			}
+			player.currOneTime.remove(player.currOneTime.size() - 1);
+		}
+
+		// same one-time durations, while
+
+		// implement as queueu
 
 		// when non-looping state is over
 		// returns to a default, or some other state
@@ -146,16 +174,26 @@ public class GdxGame extends ApplicationAdapter {
 		// bool -> state
 		// state list to bools
 
-		if (player.looping.get(player.currState)) {
-			frame = player.animations.get(player.currState).getKeyFrame(stateTime - player.startTime, player.callTime.get(player.currState),
-					player.looping.get(player.currState));
-		}
-		else {
-			frame = player.animations.get(player.currState).getKeyFrame(stateTime - player.startTime, player.callTime.get(player.currState),
-					player.looping.get(player.currState));
-		}
+//		List<String> test1 = new List<>();
+//		List<Float> test2 = new List<Float>() {
+//		};
+//
+//		test1.add(3.14f);
+//		test2.add(3.14f);
+//
+//		if (test1 == test2) {
+//			System.out.println("SAME");
+//		}
+//		else {
+//			System.out.println("DIFFERENT");
+//		}
+
+
+
+		frame = player.animations.get(player.getTotal(player.currState) + player.getTotal(player.currOneTime)).getKeyFrame(player.currStateTime);
 
 		System.out.println(player.currState);
+		System.out.println(player.currOneTime);
 		System.out.printf("%s %d%n", (((TextureAtlas.AtlasRegion) frame).name), ((TextureAtlas.AtlasRegion) frame).index);
 
 
@@ -170,6 +208,7 @@ public class GdxGame extends ApplicationAdapter {
 
 		ScreenUtils.clear(0, 0, 0, 0);
 		camera.update();
+		debugging.update();
 		debugRenderer.render(world, camera.combined);
 		batch.setProjectionMatrix(camera.combined);
 
@@ -180,6 +219,8 @@ public class GdxGame extends ApplicationAdapter {
 		batch.draw(frame, player.playerBody.getWorldCenter().x - Globals.PLAYER_WIDTH/2f - Globals.SKIN_WIDTH/2f - 8 * width_scale,
 				player.playerBody.getWorldCenter().y - Globals.PLAYER_HEIGHT/2f - Globals.SKIN_HEIGHT/2f,
 				frame.getRegionWidth() * width_scale, Globals.PLAYER_HEIGHT);
+
+		font.draw(batch, "FPS: " + Gdx.graphics.getFramesPerSecond(), camera.position.x - camera.viewportWidth/2f, camera.viewportHeight/2f);
 		batch.end();
 
 		// am stretching to fit
@@ -215,7 +256,7 @@ public class GdxGame extends ApplicationAdapter {
 		if (Gdx.input.isKeyPressed(Input.Keys.R)) {
 			camera.zoom += 0.02;
 		}
-		else if (Gdx.input.isKeyPressed(Input.Keys.T)) {
+	else if (Gdx.input.isKeyPressed(Input.Keys.T)) {
 			camera.zoom -= 0.02;
 		}
 		if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
@@ -262,9 +303,11 @@ public class GdxGame extends ApplicationAdapter {
 		else if (Gdx.input.isKeyPressed(Input.Keys.D) && player.xMove) {
 			player.moveX(1);
 		}
-		if ((!Gdx.input.isKeyPressed(Input.Keys.A) && !Gdx.input.isKeyPressed(Input.Keys.D)) || (Gdx.input.isKeyPressed(Input.Keys.A) && Gdx.input.isKeyPressed(Input.Keys.D))) {
+
+
+		if (!Gdx.input.isKeyPressed(Input.Keys.A) && !Gdx.input.isKeyPressed(Input.Keys.D)) {
 			player.xStationary();
-			player.updateState(deltaTime);
+			player.updateState();
 		}
 //		if (Gdx.input.isKeyPressed(Input.Keys.Q)) {
 //			player.updateState(Player.State.ATTACKING);

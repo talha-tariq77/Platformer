@@ -3,6 +3,7 @@ package com.gdx.plat;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
+import com.badlogic.gdx.graphics.g2d.Animation;
 
 public class InputHandler extends InputAdapter {
     Player player;
@@ -12,7 +13,6 @@ public class InputHandler extends InputAdapter {
 
     @Override
     public boolean keyDown(int keyCode) {
-        float deltaTime = Gdx.graphics.getDeltaTime();
 
         switch (keyCode) {
             case Input.Keys.SPACE:
@@ -21,11 +21,15 @@ public class InputHandler extends InputAdapter {
 //                    player.updateAnimationCallTime(deltaTime);
 //                }
                 player.jump();
-                player.updateState(deltaTime);
+                if (player.updateState()) {
+                    player.resetAnimationCallTime();
+                }
                 break;
             case Input.Keys.A:
                 player.moveX(-1);
-                player.updateState(deltaTime);
+                if (player.updateState()) {
+                    player.resetAnimationCallTime();
+                }
 //                if (!(Gdx.input.isKeyPressed(Input.Keys.D))) {
 //                    if (player.updateState(Player.State.MOVING)) {
 //                        player.updateAnimationCallTime(deltaTime);
@@ -34,7 +38,9 @@ public class InputHandler extends InputAdapter {
                 break;
             case Input.Keys.D:
                 player.moveX(1);
-                player.updateState(deltaTime);
+                if (player.updateState()) {
+                    player.resetAnimationCallTime();
+                }
 //                if (!(Gdx.input.isKeyPressed(Input.Keys.A))) {
 //                    if (player.updateState(Player.State.MOVING)) {
 //                        player.updateAnimationCallTime(deltaTime);
@@ -43,7 +49,14 @@ public class InputHandler extends InputAdapter {
                 break;
             case Input.Keys.Q:
                 player.attack();
-                player.updateState(deltaTime);
+                if (player.updateState()) {
+                    player.resetAnimationCallTime();
+                }
+
+                // reset for one-time is diff
+                // one time - time-based
+                // constant - non-time based (e.g. jump, contact)
+
 //                if (player.updateState(Player.State.ATTACKING)) {
 //                    player.updateAnimationCallTime(deltaTime);
 //                }

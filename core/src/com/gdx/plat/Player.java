@@ -4,10 +4,9 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.physics.box2d.Filter;
-import com.badlogic.gdx.utils.Array;
 
-import java.util.EnumMap;
-import java.util.HashMap;
+import java.sql.Array;
+import java.util.*;
 
 
 public class Player {
@@ -27,22 +26,16 @@ public class Player {
     Filter testFilter;
     float airborneMaxSpeed = 0.75f * maxSpeed;
 
-    boolean moving;
+    ArrayList<Boolean> actionBools;
 
-    boolean airborne;
-    boolean attacking;
-
-    EnumMap<State, ExtraAnimation<TextureRegion>> animations;
+    HashMap<Integer, ExtraAnimation<TextureRegion>> animations;
 
     public enum State {
-        NO_STATE (0),
-        IDLE ( 1),
-        MOVING (2),
-        AIRBORNE (4),
-        ATTACKING (8),
-        MOVING_AND_ATTACKING (10),
-        AIRBORNE_AND_ATTACKING (12),
-        MOVING_AND_AIRBORNE (6);
+        NO_STATE (1),
+        IDLE (2),
+        MOVING (4),
+        AIRBORNE (8),
+        ATTACKING (16);
 
         final int bits;
 
@@ -88,15 +81,16 @@ public class Player {
 //            this.state2 = B;
 //        }
 //    }
-    State currState;
-    EnumMap<State, Boolean> looping;
+    HashMap<ArrayList<State>, Boolean> looping;
 
-    EnumMap<State, Float> callTime;
 
-    float startTime;
+    float currStateTime;
 
-    EnumMap<State, EnumMap<State, State>> stateInterrupts;
+    EnumMap<State, Boolean> stateBools;
 
+    ArrayList<State> currState;
+
+    ArrayList<State> currOneTime;
 
 
     Player(float posX, float posY, float deltaTime) {
@@ -125,60 +119,26 @@ public class Player {
         testFilter.categoryBits = Globals.PLAYER_BIT;
         playerFixture.setFilterData(testFilter);
 
-        moving = false;
-        airborne = false;
-        attacking = false;
 
-        currState = State.IDLE;
+        currStateTime = 0f;
 
-        animations = new EnumMap<State, ExtraAnimation<TextureRegion>>(State.class);
+        currState = new ArrayList<State>();
+        currState.add(State.IDLE);
 
-        looping = new EnumMap<State, Boolean>(State.class);
+        stateBools = new EnumMap<State, Boolean>(State.class);
 
-        callTime = new EnumMap<State, Float>(State.class);
+        stateBools.put(State.NO_STATE, false);
+        stateBools.put(State.IDLE, true);
+        stateBools.put(State.ATTACKING, false);
+        stateBools.put(State.AIRBORNE, false);
+        stateBools.put(State.MOVING, false);
 
-        stateInterrupts = new EnumMap<State, EnumMap<State, State>>(State.class);
-        stateInterrupts.put(State.ATTACKING, new EnumMap<State, State>(State.class));
-        stateInterrupts.put(State.MOVING, new EnumMap<State, State>(State.class));
-        stateInterrupts.put(State.AIRBORNE, new EnumMap<State, State>(State.class));
-        stateInterrupts.put(State.IDLE, new EnumMap<State, State>(State.class));
-        stateInterrupts.put(State.NO_STATE, new EnumMap<State, State>(State.class));
-        stateInterrupts.put(State.MOVING_AND_AIRBORNE, new EnumMap<State, State>(State.class));
+        animations = new HashMap<>();
 
+        looping = new HashMap<ArrayList<State>, Boolean>();
 
-
-        stateInterrupts.get(State.ATTACKING).put(State.AIRBORNE, State.AIRBORNE);
-        stateInterrupts.get(State.ATTACKING).put(State.MOVING, State.MOVING_AND_ATTACKING);
-
-
-        stateInterrupts.get(State.MOVING).put(State.ATTACKING, State.MOVING_AND_ATTACKING);
-        stateInterrupts.get(State.MOVING).put(State.AIRBORNE, State.AIRBORNE);
-        stateInterrupts.get(State.MOVING).put(State.IDLE, State.IDLE);
-
-        stateInterrupts.get(State.AIRBORNE).put(State.MOVING, State.MOVING_AND_AIRBORNE);
-        stateInterrupts.get(State.AIRBORNE).put(State.NO_STATE, State.NO_STATE);
-
-        stateInterrupts.get(State.MOVING_AND_AIRBORNE).put(State.NO_STATE, State.NO_STATE);
-
-
-
-        stateInterrupts.get(State.IDLE).put(State.ATTACKING, State.ATTACKING);
-        stateInterrupts.get(State.IDLE).put(State.MOVING, State.MOVING);
-        stateInterrupts.get(State.IDLE).put(State.AIRBORNE, State.AIRBORNE);
-
-        stateInterrupts.get(State.IDLE).put(State.MOVING_AND_AIRBORNE, State.MOVING_AND_AIRBORNE);
-        stateInterrupts.get(State.IDLE).put(State.MOVING_AND_ATTACKING, State.MOVING_AND_ATTACKING);
-
-        stateInterrupts.get(State.IDLE).put(State.AIRBORNE_AND_ATTACKING, State.AIRBORNE_AND_ATTACKING);
-
-        stateInterrupts.get(State.NO_STATE).put(State.ATTACKING, State.ATTACKING);
-        stateInterrupts.get(State.NO_STATE).put(State.MOVING, State.MOVING);
-        stateInterrupts.get(State.NO_STATE).put(State.AIRBORNE, State.AIRBORNE);
-        stateInterrupts.get(State.NO_STATE).put(State.MOVING_AND_AIRBORNE, State.MOVING_AND_AIRBORNE);
-        stateInterrupts.get(State.NO_STATE).put(State.MOVING_AND_ATTACKING, State.MOVING_AND_ATTACKING);
-        stateInterrupts.get(State.NO_STATE).put(State.AIRBORNE_AND_ATTACKING, State.AIRBORNE_AND_ATTACKING);
-        stateInterrupts.get(State.NO_STATE).put(State.IDLE, State.IDLE);
-
+        currOneTime = new ArrayList<State>();
+        // those dependent on time-alone for ending
 
 
 
@@ -188,6 +148,15 @@ public class Player {
 
     }
 
+
+    public int getTotal(List<State> states) {
+        int total = 0;
+        for (State state :
+                states) {
+            total += state.bits;
+        }
+        return total;
+    }
     public void moveX(int DirectionX) {
         // reimplement as the base method of the base class no-item affected, handled by the sys
 
@@ -198,7 +167,7 @@ public class Player {
             playerBody.setLinearVelocity(0f, playerBody.getLinearVelocity().y);
         }
         float speedCap;
-        if (airborne) {
+        if (stateBools.get(State.AIRBORNE)) {
             speedCap = airborneMaxSpeed;
         }
         else {
@@ -213,29 +182,37 @@ public class Player {
         else if (playerBody.getLinearVelocity().x < -speedCap) {
             playerBody.setLinearVelocity(-speedCap, playerBody.getLinearVelocity().y);
         }
-        moving = true;
 
+        stateBools.put(State.MOVING, true);
 
     }
     public void xStationary() {
-        moving = false;
+        stateBools.put(State.MOVING, false);
         playerBody.setLinearVelocity(0f, playerBody.getLinearVelocity().y);
+
 
         // update state separate into the different state setters
     }
 
     public void jump() {
-        if (!airborne) {
+        if (!stateBools.get(State.AIRBORNE)) {
             playerBody.applyLinearImpulse(new Vector2(0, 125f), playerBody.getWorldCenter(), true);
-            airborne = true;
+            stateBools.put(State.AIRBORNE, true);
         }
     }
+    // TODO
+    // check available
+    // able to do right and left
+
+    // FIXME
+    // attack + movement causes attack to reset/repeat
+
     // input handler calls relevant methods in the animation/state
     // and the physics handler + bool (?)
     // can seperate updateState to attack, move, airborne
     // each one performs combinatorial checks on the bools
 
-    public void updateState(float deltaTime) {
+    public boolean updateState() {
 //        switch (currState) {
 //            case ATTACKING:
 //                switch (newState) {
@@ -258,41 +235,56 @@ public class Player {
 //                case
 //            }
 //        }
-        Player.State newState;
-        if (attacking) {
-            if (moving) {
-                newState = State.ATTACKING;
-            } else if (airborne) {
-                newState = State.ATTACKING;
-            } else {
-                newState = State.ATTACKING;
+
+        // check availability beforehnad, don't need all this
+        int prevCurrentState = getTotal(currState);
+        int prevOneTime = getTotal(currOneTime);
+
+        currState.clear();
+        currOneTime.clear();
+
+        if (stateBools.get(State.ATTACKING)) {
+            currOneTime.add(State.ATTACKING);
+
+            if (stateBools.get(State.MOVING)) {
+                currState.add(State.MOVING);
+            }
+            if (stateBools.get(State.AIRBORNE)) {
+                currState.add(State.AIRBORNE);
             }
         }
-        else if (airborne) {
-            if (moving)
-                newState = State.AIRBORNE;
+        else if (stateBools.get(State.AIRBORNE)) {
+            currState.add(State.AIRBORNE);
+            if (stateBools.get(State.MOVING)) {
+                currState.add(State.MOVING);
+            }
+
             // replace
-            else
-                newState = State.AIRBORNE;
+
         }
-        else if (moving)
-            newState = State.MOVING;
+        else if (stateBools.get(State.MOVING))
+            currState.add(State.MOVING);
 
         else {
-            newState = State.IDLE;
+            currState.add(State.IDLE);
         }
 
+        int newCurrState = getTotal(currState);
+        int newOneTime = getTotal(currOneTime);
 
-        if (newState != currState) {
-            currState = newState;
-            updateAnimationCallTime(deltaTime);
-        }
+        return newOneTime != prevOneTime;
+        // may need or constant has changed (?) but it is combinational, so currOneTime size > 0
 
+//        currState.sort(Enum::compareTo);
         // can keep contiguous animation by passing on the last called from one animation to next
     }
 
-    public void updateAnimationCallTime(float deltaTime) {
-        callTime.put(currState, deltaTime);
+    public void translateBools() {
+
+    }
+
+    public void resetAnimationCallTime() {
+        currStateTime = 0f;
     }
 
 //    public void updateAnimationCall(float deltaTime) {
@@ -305,8 +297,8 @@ public class Player {
 
 
     public void attack() {
-        if (!attacking) {
-            attacking = true;
+        if (!stateBools.get(State.ATTACKING)) {
+            stateBools.put(State.ATTACKING, true);
         }
     }
 

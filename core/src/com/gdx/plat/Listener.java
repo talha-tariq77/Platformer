@@ -34,8 +34,8 @@ public class Listener implements ContactListener {
         switch (categoryOr) {
             // fixtureA always has the higher category bits value
             case (Globals.GROUND_BIT | Globals.PLAYER_BIT) :
-                ((Player) fixtureB.getUserData()).airborne = false;
-                ((Player) fixtureB.getUserData()).updateState(Gdx.graphics.getDeltaTime());
+                ((Player) fixtureB.getUserData()).stateBools.put(Player.State.AIRBORNE, false);
+                ((Player) fixtureB.getUserData()).updateState();
                 System.out.println("landed");
                 break;
 //            case (1 | 4):
@@ -68,8 +68,8 @@ public class Listener implements ContactListener {
         switch (categoryOr) {
             // fixtureA always has the higher category bits value
             case (Globals.GROUND_BIT | Globals.PLAYER_BIT) :
-                ((Player) fixtureB.getUserData()).airborne = true;
-                ((Player) fixtureB.getUserData()).updateState(Gdx.graphics.getDeltaTime());
+                ((Player) fixtureB.getUserData()).stateBools.put(Player.State.AIRBORNE, true);
+                ((Player) fixtureB.getUserData()).updateState();
 
                 break;
             case (1 | 4):
