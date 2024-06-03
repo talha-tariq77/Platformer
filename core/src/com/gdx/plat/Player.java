@@ -92,6 +92,10 @@ public class Player {
 
     ArrayList<State> currOneTime;
 
+    boolean FLIP;
+
+    int curr_direction;
+
 
     Player(float posX, float posY, float deltaTime) {
         playerBodyDef = new BodyDef();
@@ -138,6 +142,11 @@ public class Player {
         looping = new HashMap<ArrayList<State>, Boolean>();
 
         currOneTime = new ArrayList<State>();
+
+        FLIP = false;
+
+        curr_direction = 1;
+
         // those dependent on time-alone for ending
 
 
@@ -184,6 +193,12 @@ public class Player {
         }
 
         stateBools.put(State.MOVING, true);
+
+
+        FLIP = DirectionX == -1;
+
+        curr_direction = DirectionX;
+
 
     }
     public void xStationary() {

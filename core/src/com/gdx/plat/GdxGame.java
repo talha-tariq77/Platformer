@@ -149,6 +149,9 @@ public class GdxGame extends ApplicationAdapter {
 			player.animations.get(player.getTotal(player.currState) + player.getTotal(player.currOneTime)).completed = false;
 			player.stateBools.put(player.currOneTime.get(player.currOneTime.size() - 1), false);
 
+			// one times complete then get removed, dont need to reset time
+			// ongoings need to reset when added to/ combined
+
 //			int i = 0;
 ////			while (i < player.currOneTime.size()) {
 //////				if (player.animations.get(player.getTotal(List.of(player.currOneTime.get(i)))).completed) {
@@ -190,7 +193,14 @@ public class GdxGame extends ApplicationAdapter {
 
 
 
-		frame = player.animations.get(player.getTotal(player.currState) + player.getTotal(player.currOneTime)).getKeyFrame(player.currStateTime);
+		frame = player.animations.get(player.getTotal(player.currState) + player.getTotal(player.currOneTime))
+				.getKeyFrame(player.currStateTime);
+
+
+
+//		System.out.printf("%d %b %b%n", player.curr_direction, player.FLIP, frame.isFlipX());
+
+
 
 		System.out.println(player.currState);
 		System.out.println(player.currOneTime);
@@ -216,9 +226,12 @@ public class GdxGame extends ApplicationAdapter {
 		float width_scale = Globals.PLAYER_HEIGHT / frame.getRegionHeight();
 
 //		System.out.println(String.format("%s %d", frame));
-		batch.draw(frame, player.playerBody.getWorldCenter().x - Globals.PLAYER_WIDTH/2f - Globals.SKIN_WIDTH/2f - 8 * width_scale,
-				player.playerBody.getWorldCenter().y - Globals.PLAYER_HEIGHT/2f - Globals.SKIN_HEIGHT/2f,
-				frame.getRegionWidth() * width_scale, Globals.PLAYER_HEIGHT);
+		float x = player.playerBody.getWorldCenter().x + (Globals.PLAYER_WIDTH/2f + Globals.SKIN_WIDTH/2f + 8 * width_scale) * -player.curr_direction;
+		float y = player.playerBody.getWorldCenter().y - Globals.PLAYER_HEIGHT/2f - Globals.SKIN_HEIGHT/2f;
+		batch.draw(frame, x,
+				y,
+				frame.getRegionWidth() * width_scale * player.curr_direction,
+				Globals.PLAYER_HEIGHT);
 
 		font.draw(batch, "FPS: " + Gdx.graphics.getFramesPerSecond(), camera.position.x - camera.viewportWidth/2f, camera.viewportHeight/2f);
 		batch.end();
