@@ -1,4 +1,5 @@
 package com.gdx.plat;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
@@ -7,6 +8,8 @@ import com.badlogic.gdx.physics.box2d.Filter;
 
 import java.sql.Array;
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 
 public class Player {
@@ -92,9 +95,18 @@ public class Player {
 
     ArrayList<State> currOneTime;
 
+    HashMap<Integer, ArrayList<Supplier<Void>>> actions;
+
+    HashMap<Integer, HashMap<TimeRange, Float>> offsets;
+
+    int fullState;
+
+
+
     boolean FLIP;
 
     int curr_direction;
+
 
 
     Player(float posX, float posY, float deltaTime) {
@@ -147,6 +159,12 @@ public class Player {
 
         curr_direction = 1;
 
+        actions = new HashMap<Integer, ArrayList<Supplier<Void>>>();
+
+        offsets = new HashMap<Integer, HashMap<TimeRange, Float>>();
+
+        fullState = calculateState();
+
         // those dependent on time-alone for ending
 
 
@@ -198,8 +216,6 @@ public class Player {
         FLIP = DirectionX == -1;
 
         curr_direction = DirectionX;
-
-
     }
     public void xStationary() {
         stateBools.put(State.MOVING, false);
@@ -287,6 +303,8 @@ public class Player {
         int newCurrState = getTotal(currState);
         int newOneTime = getTotal(currOneTime);
 
+//        if (newCurrState != prevCurrentState || newOneTime != prevOneTime)
+//        fullState = calculateState();
         return newOneTime != prevOneTime;
         // may need or constant has changed (?) but it is combinational, so currOneTime size > 0
 
@@ -294,8 +312,43 @@ public class Player {
         // can keep contiguous animation by passing on the last called from one animation to next
     }
 
-    public void translateBools() {
+    public float getOffset() {
+        if (offsets.containsKey(calculateState())) {
+            for (TimeRange offset: offsets.get(calculateState()).keySet()) {
+                int currIndex = animations.get(calculateState()).getKeyFrameIndex(currStateTime);
+                if (offset.rangeStart <= currIndex && offset.rangeEnd >= currIndex) {
+                    return offsets.get(calculateState()).get(offset);
+                }
+            }
+        }
+        return 0;
+    }
 
+    public int calculateState() {
+        return getTotal(currState) + getTotal(currOneTime);
+    }
+
+    public void addFixture() {
+        FixtureDef fixtureDef = new FixtureDef();
+        fixtureDef.isSensor = true;
+        PolygonShape sensorShape = new PolygonShape();
+        float halfWidth = 23 * Globals.PLAYER_WIDTH_CONVERT;
+        // 15 + 8 (offset)
+        // need to store offsets with animation frames
+        float halfHeight = 5.75f * Globals.PLAYER_HEIGHT/46;
+        sensorShape.setAsBox(halfWidth, halfHeight,
+                new Vector2(playerBody.getPosition().x + Globals.PLAYER_WIDTH/2f + halfWidth,
+                playerBody.getPosition().y + Globals.PLAYER_HEIGHT/2f - 22 * Globals.PLAYER_HEIGHT/46), 0);
+        fixtureDef.shape = sensorShape;
+        // y = up
+
+        Body newBody = GdxGame.world.createBody(new BodyDef());
+
+        Fixture newFixture = newBody.createFixture(fixtureDef);
+        newFixture.setUserData(this);
+
+//        fixtureDef.shape = Shape();
+                // queue to handle this, shapes?
     }
 
     public void resetAnimationCallTime() {
@@ -314,6 +367,8 @@ public class Player {
     public void attack() {
         if (!stateBools.get(State.ATTACKING)) {
             stateBools.put(State.ATTACKING, true);
+            addFixture();
+            System.out.println("done");
         }
     }
 
