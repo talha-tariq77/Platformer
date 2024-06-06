@@ -97,7 +97,9 @@ public class Player {
 
     HashMap<Integer, ArrayList<Supplier<Void>>> actions;
 
-    HashMap<Integer, HashMap<TimeRange, Float>> offsets;
+    HashMap<Integer, HashMap<TimeRange, Float>> changingOffsets;
+
+    HashMap<Integer, Float> constantOffsets;
 
     int fullState;
 
@@ -161,9 +163,13 @@ public class Player {
 
         actions = new HashMap<Integer, ArrayList<Supplier<Void>>>();
 
-        offsets = new HashMap<Integer, HashMap<TimeRange, Float>>();
+        changingOffsets = new HashMap<Integer, HashMap<TimeRange, Float>>();
+
+        constantOffsets = new HashMap<Integer, Float>();
 
         fullState = calculateState();
+
+
 
         // those dependent on time-alone for ending
 
@@ -217,6 +223,26 @@ public class Player {
 
         curr_direction = DirectionX;
     }
+
+    public float getOffset() {
+        if (constantOffsets.containsKey(fullState)) {
+            return constantOffsets.get(fullState);
+        }
+        else if (changingOffsets.containsKey(fullState)) {
+            for (TimeRange offset: changingOffsets.get(fullState).keySet()) {
+                int currIndex = animations.get(fullState).getKeyFrameIndex(currStateTime);
+
+                if (offset.rangeStart <= currIndex && offset.rangeEnd >= currIndex) {
+                    return changingOffsets.get(fullState).get(offset);
+                }
+            }
+            return 0;
+        }
+        else {
+            return 0;
+        }
+    }
+
     public void xStationary() {
         stateBools.put(State.MOVING, false);
         playerBody.setLinearVelocity(0f, playerBody.getLinearVelocity().y);
@@ -303,25 +329,14 @@ public class Player {
         int newCurrState = getTotal(currState);
         int newOneTime = getTotal(currOneTime);
 
-//        if (newCurrState != prevCurrentState || newOneTime != prevOneTime)
-//        fullState = calculateState();
+        if (newCurrState != prevCurrentState || newOneTime != prevOneTime)
+            fullState = calculateState();
+
         return newOneTime != prevOneTime;
         // may need or constant has changed (?) but it is combinational, so currOneTime size > 0
 
 //        currState.sort(Enum::compareTo);
         // can keep contiguous animation by passing on the last called from one animation to next
-    }
-
-    public float getOffset() {
-        if (offsets.containsKey(calculateState())) {
-            for (TimeRange offset: offsets.get(calculateState()).keySet()) {
-                int currIndex = animations.get(calculateState()).getKeyFrameIndex(currStateTime);
-                if (offset.rangeStart <= currIndex && offset.rangeEnd >= currIndex) {
-                    return offsets.get(calculateState()).get(offset);
-                }
-            }
-        }
-        return 0;
     }
 
     public int calculateState() {
@@ -337,7 +352,7 @@ public class Player {
         // need to store offsets with animation frames
         float halfHeight = 5.75f * Globals.PLAYER_HEIGHT/46;
         sensorShape.setAsBox(halfWidth, halfHeight,
-                new Vector2(playerBody.getPosition().x + Globals.PLAYER_WIDTH/2f + halfWidth,
+                new Vector2(playerBody.getPosition().x + (Globals.PLAYER_WIDTH/2f + halfWidth) * curr_direction,
                 playerBody.getPosition().y + Globals.PLAYER_HEIGHT/2f - 22 * Globals.PLAYER_HEIGHT/46), 0);
         fixtureDef.shape = sensorShape;
         // y = up

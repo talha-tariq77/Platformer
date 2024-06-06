@@ -9,6 +9,7 @@ import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.physics.box2d.*;
 
+import java.sql.Time;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -68,14 +69,14 @@ public class GdxGame extends ApplicationAdapter {
 		stateTime = 0f;
 
 
-		player.animations.put(player.getTotal(List.of(Player.State.ATTACKING)), new ExtraAnimation<TextureRegion>(2/4f, atlas.findRegions("attack"), false));
+		player.animations.put(player.getTotal(List.of(Player.State.ATTACKING)), new ExtraAnimation<TextureRegion>(2f, atlas.findRegions("attack"), false));
 
 
-		player.animations.put(player.getTotal(List.of(Player.State.ATTACKING, Player.State.AIRBORNE)), new ExtraAnimation<TextureRegion>(4/30f, atlas.findRegions("attack"), false));
+		player.animations.put(player.getTotal(List.of(Player.State.ATTACKING, Player.State.AIRBORNE)), new ExtraAnimation<TextureRegion>(2f, atlas.findRegions("attack"), false));
 
 
-		player.animations.put(player.getTotal(List.of(Player.State.ATTACKING, Player.State.MOVING)), new ExtraAnimation<TextureRegion>(2/4f, atlas.findRegions("attack"), false));
-		player.animations.put(player.getTotal(List.of(Player.State.AIRBORNE,Player.State.MOVING, Player.State.ATTACKING)), new ExtraAnimation<TextureRegion>(2/4f, atlas.findRegions("attack"), false));
+		player.animations.put(player.getTotal(List.of(Player.State.ATTACKING, Player.State.MOVING)), new ExtraAnimation<TextureRegion>(2f, atlas.findRegions("attack"), false));
+		player.animations.put(player.getTotal(List.of(Player.State.AIRBORNE,Player.State.MOVING, Player.State.ATTACKING)), new ExtraAnimation<TextureRegion>(2f, atlas.findRegions("attack"), false));
 
 
 		player.animations.put(player.getTotal(List.of(Player.State.AIRBORNE)), new ExtraAnimation<TextureRegion>(1/8f, atlas.findRegions("jumping"), false));
@@ -95,7 +96,29 @@ public class GdxGame extends ApplicationAdapter {
 
 		// make animations require one for each state ?
 
+		player.constantOffsets.put(player.getTotal(List.of(Player.State.IDLE)), 8f);
+
+		player.changingOffsets.put(player.getTotal(List.of(Player.State.ATTACKING)), new HashMap<>());
+		player.changingOffsets.get(player.getTotal(List.of(Player.State.ATTACKING))).put(new TimeRange(0,0), 15f);
+		player.changingOffsets.get(player.getTotal(List.of(Player.State.ATTACKING))).put(new TimeRange(1,1), 13f);
+		player.changingOffsets.get(player.getTotal(List.of(Player.State.ATTACKING))).put(new TimeRange(2,2), 2f);
+		player.changingOffsets.get(player.getTotal(List.of(Player.State.ATTACKING))).put(new TimeRange(3,3), 4f);
+
+
+		// by looping
+
+
+
+		// actions, offsets and animations
+
 		debugRenderer = new Box2DDebugRenderer();
+//		debugRenderer.setDrawAABBs(true);
+//		debugRenderer.setDrawBodies(true);
+//		debugRenderer.setDrawContacts(true);
+//		debugRenderer.setDrawJoints(true);
+//		debugRenderer.setDrawVelocities(true);
+//		debugRenderer.setDrawInactiveBodies(true);
+
 		cameraFollow = false;
 		// build a custom animations class
 
@@ -139,7 +162,6 @@ public class GdxGame extends ApplicationAdapter {
 //			player.attacking = false;
 //		}
 
-		player.currStateTime += Gdx.graphics.getDeltaTime();
 
 
 		if (!player.animations.containsKey(player.getTotal(player.currOneTime) + player.getTotal(player.currState))) {
@@ -192,9 +214,11 @@ public class GdxGame extends ApplicationAdapter {
 //		}
 
 
-
 		frame = player.animations.get(player.getTotal(player.currState) + player.getTotal(player.currOneTime))
 				.getKeyFrame(player.currStateTime);
+
+
+		player.currStateTime += Gdx.graphics.getDeltaTime();
 
 
 
@@ -226,7 +250,8 @@ public class GdxGame extends ApplicationAdapter {
 		float width_scale = Globals.PLAYER_HEIGHT / frame.getRegionHeight();
 
 //		System.out.println(String.format("%s %d", frame));
-		float x = player.playerBody.getWorldCenter().x + (Globals.PLAYER_WIDTH/2f + Globals.SKIN_WIDTH/2f + 8 * width_scale) * -player.curr_direction;
+		float x = player.playerBody.getWorldCenter().x + (Globals.PLAYER_WIDTH/2f + Globals.SKIN_WIDTH/2f +
+				player.getOffset() * Globals.PLAYER_WIDTH_CONVERT) * -player.curr_direction;
 		float y = player.playerBody.getWorldCenter().y - Globals.PLAYER_HEIGHT/2f - Globals.SKIN_HEIGHT/2f;
 		batch.draw(frame, x,
 				y,
@@ -318,7 +343,7 @@ public class GdxGame extends ApplicationAdapter {
 		}
 
 
-		if (!Gdx.input.isKeyPressed(Input.Keys.A) && !Gdx.input.isKeyPressed(Input.Keys.D)) {
+		if (!Gdx.input.isKeyPressed(Input.Keys.A) && !Gdx.input.isKeyPressed(Input.Keys.D) && !player.stateBools.get(Player.State.ATTACKING)) {
 			player.xStationary();
 			player.updateState();
 		}

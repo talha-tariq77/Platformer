@@ -51,6 +51,7 @@ public class InputHandler extends InputAdapter {
                 player.attack();
                 if (player.updateState()) {
                     player.resetAnimationCallTime();
+                    System.out.println("hi");
                 }
 
                 // reset for one-time is diff
