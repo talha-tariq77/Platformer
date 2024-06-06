@@ -167,6 +167,8 @@ public class GdxGame extends ApplicationAdapter {
 		if (!player.animations.containsKey(player.getTotal(player.currOneTime) + player.getTotal(player.currState))) {
 			System.out.println("no");
 		}
+
+
 		if (!player.currOneTime.isEmpty() && player.animations.get(player.getTotal(player.currOneTime) + player.getTotal(player.currState)).completed) {
 			player.animations.get(player.getTotal(player.currState) + player.getTotal(player.currOneTime)).completed = false;
 			player.stateBools.put(player.currOneTime.get(player.currOneTime.size() - 1), false);
@@ -343,7 +345,7 @@ public class GdxGame extends ApplicationAdapter {
 		}
 
 
-		if (!Gdx.input.isKeyPressed(Input.Keys.A) && !Gdx.input.isKeyPressed(Input.Keys.D) && !player.stateBools.get(Player.State.ATTACKING)) {
+		if (!Gdx.input.isKeyPressed(Input.Keys.A) && !Gdx.input.isKeyPressed(Input.Keys.D)) {
 			player.xStationary();
 			player.updateState();
 		}

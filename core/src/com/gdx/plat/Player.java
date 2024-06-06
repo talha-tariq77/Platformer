@@ -230,7 +230,7 @@ public class Player {
         }
         else if (changingOffsets.containsKey(fullState)) {
             for (TimeRange offset: changingOffsets.get(fullState).keySet()) {
-                int currIndex = animations.get(fullState).getKeyFrameIndex(currStateTime);
+                int currIndex = animations.get(fullState).getKeyFrameIndex(currStateTime, false);
 
                 if (offset.rangeStart <= currIndex && offset.rangeEnd >= currIndex) {
                     return changingOffsets.get(fullState).get(offset);
@@ -329,9 +329,10 @@ public class Player {
         int newCurrState = getTotal(currState);
         int newOneTime = getTotal(currOneTime);
 
-        if (newCurrState != prevCurrentState || newOneTime != prevOneTime)
-            fullState = calculateState();
+//        if (newCurrState != prevCurrentState || newOneTime != prevOneTime)
+//            fullState = calculateState();
 
+        fullState = calculateState();
         return newOneTime != prevOneTime;
         // may need or constant has changed (?) but it is combinational, so currOneTime size > 0
 

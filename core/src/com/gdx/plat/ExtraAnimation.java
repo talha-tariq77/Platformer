@@ -107,14 +107,14 @@ public class ExtraAnimation<T> {
      * @param stateTime
      * @return the frame of animation for the given state time. */
     public T getKeyFrame2 (float stateTime) {
-        int frameNumber = getKeyFrameIndex(stateTime);
+        int frameNumber = getKeyFrameIndex(stateTime, true);
         return keyFrames[frameNumber];
     }
 
     /** Returns the current frame number.
      * @param stateTime
      * @return current frame number */
-    public int getKeyFrameIndex (float stateTime) {
+    public int getKeyFrameIndex (float stateTime, boolean updateCompleted) {
         if (keyFrames.length == 1) return 0;
 
         int frameNumber = (int)(stateTime / frameDuration);
@@ -122,7 +122,8 @@ public class ExtraAnimation<T> {
             case NORMAL:
                 if (frameNumber > keyFrames.length - 1) {
                     frameNumber = keyFrames.length - 1;
-                    completed = true;
+                    if (updateCompleted)
+                        completed = true;
                 }
                 break;
             case LOOP:
