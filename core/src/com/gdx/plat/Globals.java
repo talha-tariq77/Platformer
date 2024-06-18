@@ -11,15 +11,28 @@ public class Globals {
     static float WIDTH_FACTOR = (float) VIEWPORT_WIDTH / WINDOW_WIDTH;
     // pixels per unit
 
-    static float UNITS_PER_PIXEL = (float) WINDOW_WIDTH / VIEWPORT_WIDTH;
+
+    // in game objects have been set to a different size/scale
+    // since i have set them arbitrarily according to the in-game size i wanted
+    // my player sprite to appear (keeping proportion)
+
+    static float PLAYER_PIXELS_WIDTH = 20;
+
+    public static final float PLAYER_HEIGHT = 1.75f;
+    public static final float PLAYER_WIDTH = 0.73f;
+
+    static float PIXELS_PER_UNIT = (float) PLAYER_PIXELS_WIDTH / PLAYER_WIDTH;
+
+    static float PLAYER_PIXELS_HEIGHT = PLAYER_HEIGHT * PIXELS_PER_UNIT;
+
+
+    static float UNITS_PER_PIXEL = (float) PLAYER_WIDTH / PLAYER_PIXELS_WIDTH;
 
     static float HEIGHT_FACTOR = (float) VIEWPORT_HEIGHT / WINDOW_HEIGHT;
 
     static int GRAVITY = -10;
 
     static int GRAVITY_MULTIPLIER = 8;
-    public static final float PLAYER_HEIGHT = 1.75f;
-    public static final float PLAYER_WIDTH = 0.72916f;
 
     public static final short PLAYER_BIT = 1;
     public static final short GROUND_BIT = 2;

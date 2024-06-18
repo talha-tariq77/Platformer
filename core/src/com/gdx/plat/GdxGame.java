@@ -8,9 +8,11 @@ import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.physics.box2d.*;
+import org.w3c.dom.Text;
 
 import java.sql.Time;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 public class GdxGame extends ApplicationAdapter {
@@ -38,6 +40,8 @@ public class GdxGame extends ApplicationAdapter {
 	InputHandler inputHandler;
 
 	BitmapFont font;
+
+	int prevState;
 
 
 
@@ -69,25 +73,26 @@ public class GdxGame extends ApplicationAdapter {
 		stateTime = 0f;
 
 
-		player.animations.put(player.getTotal(List.of(Player.State.ATTACKING)), new ExtraAnimation<TextureRegion>(2f, atlas.findRegions("attack"), false));
+		ExtraAnimation<TextureRegion> attackAnimation = new ExtraAnimation<TextureRegion>(2f, atlas.findRegions("attack"), false);
+		player.animations.put(player.getTotal(List.of(player.actionComponent.stateDict.get("ATTACKING"))), attackAnimation);
 
 
-		player.animations.put(player.getTotal(List.of(Player.State.ATTACKING, Player.State.AIRBORNE)), new ExtraAnimation<TextureRegion>(2f, atlas.findRegions("attack"), false));
+		player.animations.put(player.getTotal(List.of(player.actionComponent.stateDict.get("ATTACKING"), player.actionComponent.stateDict.get("AIRBORNE"))), new ExtraAnimation<TextureRegion>(2f, atlas.findRegions("attack"), false));
 
 
-		player.animations.put(player.getTotal(List.of(Player.State.ATTACKING, Player.State.MOVING)), new ExtraAnimation<TextureRegion>(2f, atlas.findRegions("attack"), false));
-		player.animations.put(player.getTotal(List.of(Player.State.AIRBORNE,Player.State.MOVING, Player.State.ATTACKING)), new ExtraAnimation<TextureRegion>(2f, atlas.findRegions("attack"), false));
+		player.animations.put(player.getTotal(List.of(player.actionComponent.stateDict.get("ATTACKING"), player.actionComponent.stateDict.get("MOVING"))), new ExtraAnimation<TextureRegion>(2f, atlas.findRegions("attack"), false));
+		player.animations.put(player.getTotal(List.of(player.actionComponent.stateDict.get("AIRBORNE"),player.actionComponent.stateDict.get("MOVING"), player.actionComponent.stateDict.get("ATTACKING"))), new ExtraAnimation<TextureRegion>(2f, atlas.findRegions("attack"), false));
 
 
-		player.animations.put(player.getTotal(List.of(Player.State.AIRBORNE)), new ExtraAnimation<TextureRegion>(1/8f, atlas.findRegions("jumping"), false));
+		player.animations.put(player.getTotal(List.of(player.actionComponent.stateDict.get("AIRBORNE"))), new ExtraAnimation<TextureRegion>(1/8f, atlas.findRegions("jumping"), false));
 
 
-		player.animations.put(player.getTotal(List.of(Player.State.AIRBORNE,Player.State.MOVING)), new ExtraAnimation<TextureRegion>(1/8f, atlas.findRegions("jumping"), false));
+		player.animations.put(player.getTotal(List.of(player.actionComponent.stateDict.get("AIRBORNE"),player.actionComponent.stateDict.get("MOVING"))), new ExtraAnimation<TextureRegion>(1/8f, atlas.findRegions("jumping"), true));
 
-		player.animations.put(player.getTotal(List.of(Player.State.MOVING)), new ExtraAnimation<TextureRegion>(1/8f, atlas.findRegions("running"), true));
+		player.animations.put(player.getTotal(List.of(player.actionComponent.stateDict.get("MOVING"))), new ExtraAnimation<TextureRegion>(1/8f, atlas.findRegions("running"), true));
 
 
-		player.animations.put(player.getTotal(List.of(Player.State.IDLE)), new ExtraAnimation<TextureRegion>(1/8f, atlas.findRegions("idle"), true));
+		player.animations.put(player.getTotal(List.of(player.actionComponent.stateDict.get("IDLE"))), new ExtraAnimation<TextureRegion>(1/8f, atlas.findRegions("idle"), true));
 
 
 		player.animations.put(0, new ExtraAnimation<TextureRegion>(1/8f, atlas.findRegions("idle"), true));
@@ -96,16 +101,41 @@ public class GdxGame extends ApplicationAdapter {
 
 		// make animations require one for each state ?
 
-		player.constantOffsets.put(player.getTotal(List.of(Player.State.IDLE)), 8f);
+		player.constantOffsets.put(player.getTotal(List.of(player.actionComponent.stateDict.get("IDLE"))), 8f);
 
-		player.changingOffsets.put(player.getTotal(List.of(Player.State.ATTACKING)), new HashMap<>());
-		player.changingOffsets.get(player.getTotal(List.of(Player.State.ATTACKING))).put(new TimeRange(0,0), 15f);
-		player.changingOffsets.get(player.getTotal(List.of(Player.State.ATTACKING))).put(new TimeRange(1,1), 13f);
-		player.changingOffsets.get(player.getTotal(List.of(Player.State.ATTACKING))).put(new TimeRange(2,2), 2f);
-		player.changingOffsets.get(player.getTotal(List.of(Player.State.ATTACKING))).put(new TimeRange(3,3), 4f);
+		player.changingOffsets.put(player.getTotal(List.of(player.actionComponent.stateDict.get("ATTACKING"))), new HashMap<>());
+		player.changingOffsets.get(player.getTotal(List.of(player.actionComponent.stateDict.get("ATTACKING")))).put(new TimeRange(0,0), 15f);
+		player.changingOffsets.get(player.getTotal(List.of(player.actionComponent.stateDict.get("ATTACKING")))).put(new TimeRange(1,1), 13f);
+		player.changingOffsets.get(player.getTotal(List.of(player.actionComponent.stateDict.get("ATTACKING")))).put(new TimeRange(2,2), 2f);
+		player.changingOffsets.get(player.getTotal(List.of(player.actionComponent.stateDict.get("ATTACKING")))).put(new TimeRange(3,3), 4f);
+
+		player.changingOffsets.put(player.getTotal(List.of(player.actionComponent.stateDict.get("MOVING"))), new HashMap<>());
+
+		player.changingOffsets.get(player.getTotal(List.of(player.actionComponent.stateDict.get("MOVING")))).put(new TimeRange(0,0), 8f);
+		player.changingOffsets.get(player.getTotal(List.of(player.actionComponent.stateDict.get("MOVING")))).put(new TimeRange(1,1), 11f);
+		player.changingOffsets.get(player.getTotal(List.of(player.actionComponent.stateDict.get("MOVING")))).put(new TimeRange(2,2), 8f);
+		player.changingOffsets.get(player.getTotal(List.of(player.actionComponent.stateDict.get("MOVING")))).put(new TimeRange(3,3), 11f);
+		player.changingOffsets.get(player.getTotal(List.of(player.actionComponent.stateDict.get("MOVING")))).put(new TimeRange(4,4), 7f);
+		player.changingOffsets.get(player.getTotal(List.of(player.actionComponent.stateDict.get("MOVING")))).put(new TimeRange(5,5), 9f);
+		player.changingOffsets.get(player.getTotal(List.of(player.actionComponent.stateDict.get("MOVING")))).put(new TimeRange(6,6), 10f);
+		player.changingOffsets.get(player.getTotal(List.of(player.actionComponent.stateDict.get("MOVING")))).put(new TimeRange(7,7), 11f);
 
 
+		player.changingOffsets.put(player.getTotal(List.of(player.actionComponent.stateDict.get("MOVING"), player.actionComponent.stateDict.get("ATTACKING"))), new HashMap<>());
+		player.changingOffsets.get(player.getTotal(List.of(player.actionComponent.stateDict.get("ATTACKING"), player.actionComponent.stateDict.get("MOVING")))).put(new TimeRange(0,0), 15f);
+		player.changingOffsets.get(player.getTotal(List.of(player.actionComponent.stateDict.get("ATTACKING"), player.actionComponent.stateDict.get("MOVING")))).put(new TimeRange(1,1), 13f);
+		player.changingOffsets.get(player.getTotal(List.of(player.actionComponent.stateDict.get("ATTACKING"), player.actionComponent.stateDict.get("MOVING")))).put(new TimeRange(2,2), 2f);
+		player.changingOffsets.get(player.getTotal(List.of(player.actionComponent.stateDict.get("ATTACKING"), player.actionComponent.stateDict.get("MOVING")))).put(new TimeRange(3,3), 4f);
+		prevState = 0;
 		// by looping
+
+		// use arrays for per frame
+		// fastest
+		// or a constant value
+
+		// animation and action
+		// offsets
+		//
 
 
 
@@ -130,10 +160,10 @@ public class GdxGame extends ApplicationAdapter {
 	}
 
 	public void updateCamera(OrthographicCamera orthographicCamera) {
-		if (player.playerBody.isAwake()) {
+		if (player.actionComponent.body.isAwake()) {
 //			float extreme_x = player.playerBody.getWorldPoint(new Vector2(Globals.PLAYER_WIDTH/2f, 0f)).x;
-			if (player.playerBody.getWorldCenter().x > orthographicCamera.position.x && cameraFollow) {
-				orthographicCamera.position.set(player.playerBody.getWorldCenter().x, orthographicCamera.position.y, orthographicCamera.position.z);
+			if (player.actionComponent.body.getWorldCenter().x > orthographicCamera.position.x && cameraFollow) {
+				orthographicCamera.position.set(player.actionComponent.body.getWorldCenter().x, orthographicCamera.position.y, orthographicCamera.position.z);
 			}
 		}
 	}
@@ -169,23 +199,6 @@ public class GdxGame extends ApplicationAdapter {
 		}
 
 
-		if (!player.currOneTime.isEmpty() && player.animations.get(player.getTotal(player.currOneTime) + player.getTotal(player.currState)).completed) {
-			player.animations.get(player.getTotal(player.currState) + player.getTotal(player.currOneTime)).completed = false;
-			player.stateBools.put(player.currOneTime.get(player.currOneTime.size() - 1), false);
-
-			// one times complete then get removed, dont need to reset time
-			// ongoings need to reset when added to/ combined
-
-//			int i = 0;
-////			while (i < player.currOneTime.size()) {
-//////				if (player.animations.get(player.getTotal(List.of(player.currOneTime.get(i)))).completed) {
-//////					player.stateBools.put(player.currOneTime.get(i), false);
-//////				}
-//////				i++;
-////			}
-			player.currOneTime.remove(player.currOneTime.size() - 1);
-		}
-
 		// same one-time durations, while
 
 		// implement as queueu
@@ -219,9 +232,61 @@ public class GdxGame extends ApplicationAdapter {
 		frame = player.animations.get(player.getTotal(player.currState) + player.getTotal(player.currOneTime))
 				.getKeyFrame(player.currStateTime);
 
+		if (player.actionGroupMapping.containsKey(player.getTotal(player.currOneTime))) {
+
+			// changed state
+			// set true/false
+			if (player.animations.get(player.getTotal(player.currOneTime) + player.getTotal(player.currState)).frameNumberChanged
+			&& prevState == player.getTotal(player.currState) + player.getTotal(player.currOneTime)) {
+				// prevents double fixtures when change dir
+
+				// both
+				// and animation not changed
+				// action w frame?
+				int keyFrameIndex = player.animations.get(player.getTotal(player.currOneTime) + player.getTotal(player.currState))
+						.justGetKeyFrameIndex(player.currStateTime);
+
+				for (Consumer<ActionComponent> action: player.actionGroupMapping.get(player.getTotal(player.currOneTime))
+						.getCurrentAction(keyFrameIndex)) {
+					action.accept(player.actionComponent);
+				}
+
+			}
+			else {
+				if (player.animations.get(player.getTotal(player.currOneTime) + player.getTotal(player.currState)).completed
+				&& player.actionGroupMapping.get(player.getTotal(player.currOneTime))
+						.completeAction != null) {
+					player.actionGroupMapping.get(player.getTotal(player.currOneTime))
+							.completeAction.accept(player.actionComponent);
+				}
+			}
+		}
+
+
+		// have actions seperated
+		// it may skip the final frame, skip completion action
+		//
+
+
 
 		player.currStateTime += Gdx.graphics.getDeltaTime();
 
+		if (!player.currOneTime.isEmpty() && player.animations.get(player.getTotal(player.currOneTime) + player.getTotal(player.currState)).completed) {
+			player.animations.get(player.getTotal(player.currState) + player.getTotal(player.currOneTime)).completed = false;
+			player.actionComponent.stateBools.put(player.currOneTime.get(player.currOneTime.size() - 1), false);
+
+			// one times complete then get removed, dont need to reset time
+			// ongoings need to reset when added to/ combined
+
+//			int i = 0;
+////			while (i < player.currOneTime.size()) {
+//////				if (player.animations.get(player.getTotal(List.of(player.currOneTime.get(i)))).completed) {
+//////					player.stateBools.put(player.currOneTime.get(i), false);
+//////				}
+//////				i++;
+////			}
+			player.currOneTime.remove(player.currOneTime.size() - 1);
+		}
 
 
 //		System.out.printf("%d %b %b%n", player.curr_direction, player.FLIP, frame.isFlipX());
@@ -242,6 +307,9 @@ public class GdxGame extends ApplicationAdapter {
 //			player.attacking = false;
 //		}
 
+		prevState = player.getTotal(player.currOneTime) + player.getTotal(player.currState);
+
+
 		ScreenUtils.clear(0, 0, 0, 0);
 		camera.update();
 		debugging.update();
@@ -252,12 +320,12 @@ public class GdxGame extends ApplicationAdapter {
 		float width_scale = Globals.PLAYER_HEIGHT / frame.getRegionHeight();
 
 //		System.out.println(String.format("%s %d", frame));
-		float x = player.playerBody.getWorldCenter().x + (Globals.PLAYER_WIDTH/2f + Globals.SKIN_WIDTH/2f +
-				player.getOffset() * Globals.PLAYER_WIDTH_CONVERT) * -player.curr_direction;
-		float y = player.playerBody.getWorldCenter().y - Globals.PLAYER_HEIGHT/2f - Globals.SKIN_HEIGHT/2f;
+		float x = player.actionComponent.body.getWorldCenter().x + (Globals.PLAYER_WIDTH/2f + Globals.SKIN_WIDTH/2f +
+				player.getOffset() * Globals.PLAYER_WIDTH_CONVERT) * -player.actionComponent.curr_direction;
+		float y = player.actionComponent.body.getWorldCenter().y - Globals.PLAYER_HEIGHT/2f - Globals.SKIN_HEIGHT/2f;
 		batch.draw(frame, x,
 				y,
-				frame.getRegionWidth() * width_scale * player.curr_direction,
+				frame.getRegionWidth() * width_scale * player.actionComponent.curr_direction,
 				Globals.PLAYER_HEIGHT);
 
 		font.draw(batch, "FPS: " + Gdx.graphics.getFramesPerSecond(), camera.position.x - camera.viewportWidth/2f, camera.viewportHeight/2f);
@@ -349,6 +417,9 @@ public class GdxGame extends ApplicationAdapter {
 			player.xStationary();
 			player.updateState();
 		}
+		player.updateState();
+		// call after update, ground
+
 //		if (Gdx.input.isKeyPressed(Input.Keys.Q)) {
 //			player.updateState(Player.State.ATTACKING);
 //			player.updateAnimationCallTime(deltaTime);

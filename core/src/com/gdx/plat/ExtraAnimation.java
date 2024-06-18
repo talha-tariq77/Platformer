@@ -25,13 +25,14 @@ public class ExtraAnimation<T> {
     T[] keyFrames;
     private float frameDuration;
     private float animationDuration;
-    private int lastFrameNumber;
+    public int lastFrameNumber;
     private float lastStateTime;
 
     public boolean completed;
 
     public boolean looping;
 
+    public boolean frameNumberChanged;
     private PlayMode playMode = PlayMode.NORMAL;
 
     /** Constructor, storing the frame duration and key frames.
@@ -49,6 +50,7 @@ public class ExtraAnimation<T> {
         setKeyFrames(frames);
 
         completed = false;
+        frameNumberChanged = false;
         this.looping = looping;
     }
 
@@ -61,6 +63,7 @@ public class ExtraAnimation<T> {
         this(frameDuration, keyFrames, looping);
         setPlayMode(playMode);
         completed = false;
+        frameNumberChanged = false;
     }
 
     /** Constructor, storing the frame duration and key frames.
@@ -72,6 +75,7 @@ public class ExtraAnimation<T> {
         setKeyFrames(keyFrames);
         this.looping = looping;
         completed = false;
+        frameNumberChanged = false;
     }
 
     /** Returns a frame based on the so called state time. This is the amount of seconds an object has spent in the state this
@@ -111,10 +115,28 @@ public class ExtraAnimation<T> {
         return keyFrames[frameNumber];
     }
 
+    public int justGetKeyFrameIndex(float stateTime) {
+        PlayMode oldPlayMode = playMode;
+        if (looping && (playMode == PlayMode.NORMAL || playMode == PlayMode.REVERSED)) {
+            if (playMode == PlayMode.NORMAL)
+                playMode = PlayMode.LOOP;
+            else
+                playMode = PlayMode.LOOP_REVERSED;
+        } else if (!looping && !(playMode == PlayMode.NORMAL || playMode == PlayMode.REVERSED)) {
+            if (playMode == PlayMode.LOOP_REVERSED)
+                playMode = PlayMode.REVERSED;
+            else
+                playMode = PlayMode.LOOP;
+        }
+        int i = getKeyFrameIndex(stateTime, false);
+        playMode = oldPlayMode;
+        return i;
+    }
+
     /** Returns the current frame number.
      * @param stateTime
      * @return current frame number */
-    public int getKeyFrameIndex (float stateTime, boolean updateCompleted) {
+    public int getKeyFrameIndex (float stateTime, boolean update) {
         if (keyFrames.length == 1) return 0;
 
         int frameNumber = (int)(stateTime / frameDuration);
@@ -122,8 +144,9 @@ public class ExtraAnimation<T> {
             case NORMAL:
                 if (frameNumber > keyFrames.length - 1) {
                     frameNumber = keyFrames.length - 1;
-                    if (updateCompleted)
+                    if (update) {
                         completed = true;
+                    }
                 }
                 break;
             case LOOP:
@@ -150,8 +173,12 @@ public class ExtraAnimation<T> {
                 break;
         }
 
-        lastFrameNumber = frameNumber;
-        lastStateTime = stateTime;
+        if (update) {
+            frameNumberChanged = frameNumber != lastFrameNumber;
+            lastFrameNumber = frameNumber;
+            lastStateTime = stateTime;
+        }
+
 
         return frameNumber;
     }

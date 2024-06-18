@@ -38,6 +38,9 @@ public class InputHandler extends InputAdapter {
                 break;
             case Input.Keys.D:
                 player.moveX(1);
+                if (player.currState.contains(8)) {
+                    System.out.println("yes");
+                }
                 if (player.updateState()) {
                     player.resetAnimationCallTime();
                 }
@@ -48,7 +51,10 @@ public class InputHandler extends InputAdapter {
 //                }
                 break;
             case Input.Keys.Q:
-                player.attack();
+//                player.attack();
+                if (!player.actionComponent.stateBools.get(player.actionComponent.stateDict.get("ATTACKING"))) {
+                    player.actionComponent.stateBools.put(player.actionComponent.stateDict.get("ATTACKING"), true);
+                }
                 if (player.updateState()) {
                     player.resetAnimationCallTime();
                     System.out.println("hi");
@@ -64,6 +70,7 @@ public class InputHandler extends InputAdapter {
                 break;
         }
         return true;
+        // update for removal
     }
 }
 
