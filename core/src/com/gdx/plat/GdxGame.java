@@ -120,6 +120,15 @@ public class GdxGame extends ApplicationAdapter {
 		player.changingOffsets.get(player.getTotal(List.of(player.actionComponent.stateDict.get("MOVING")))).put(new TimeRange(6,6), 10f);
 		player.changingOffsets.get(player.getTotal(List.of(player.actionComponent.stateDict.get("MOVING")))).put(new TimeRange(7,7), 11f);
 
+		player.changingOffsets.put(player.getTotal(List.of(player.actionComponent.stateDict.get("AIRBORNE"),
+						player.actionComponent.stateDict.get("ATTACKING"))),
+				player.changingOffsets.get(player.getTotal(List.of(player.actionComponent.stateDict.get("ATTACKING")))));
+
+		player.changingOffsets.put(player.getTotal(List.of(player.actionComponent.stateDict.get("AIRBORNE"),
+						player.actionComponent.stateDict.get("ATTACKING"),
+						player.actionComponent.stateDict.get("MOVING"))),
+				player.changingOffsets.get(player.getTotal(List.of(player.actionComponent.stateDict.get("ATTACKING")))));
+
 
 		player.changingOffsets.put(player.getTotal(List.of(player.actionComponent.stateDict.get("MOVING"), player.actionComponent.stateDict.get("ATTACKING"))), new HashMap<>());
 		player.changingOffsets.get(player.getTotal(List.of(player.actionComponent.stateDict.get("ATTACKING"), player.actionComponent.stateDict.get("MOVING")))).put(new TimeRange(0,0), 15f);
@@ -232,8 +241,11 @@ public class GdxGame extends ApplicationAdapter {
 		frame = player.animations.get(player.getTotal(player.currState) + player.getTotal(player.currOneTime))
 				.getKeyFrame(player.currStateTime);
 
-		if (player.actionGroupMapping.containsKey(player.getTotal(player.currOneTime))) {
+		// oneTimes in a queue
+		// add directly to queue
+		// use
 
+		if (player.actionGroupMapping.containsKey(player.getTotal(player.currOneTime))) {
 			// changed state
 			// set true/false
 			if (player.animations.get(player.getTotal(player.currOneTime) + player.getTotal(player.currState)).frameNumberChanged
@@ -402,22 +414,31 @@ public class GdxGame extends ApplicationAdapter {
 //			}
 //		}
 
-//		else if (Gdx.input.isKeyPressed(Input.Keys.A) && !Gdx.input.isKeyPressed(Input.Keys.D)) {
+
+//		if (Gdx.input.isKeyPressed(Input.Keys.A) && player.xMove) {
 //			player.moveX(-1);
+//			if (player.updateState()) {
+//				player.resetAnimationCallTime();
+//			}
 //		}
-		if (Gdx.input.isKeyPressed(Input.Keys.A) && player.xMove) {
-			player.moveX(-1);
-		}
-		else if (Gdx.input.isKeyPressed(Input.Keys.D) && player.xMove) {
-			player.moveX(1);
-		}
+//		else if (Gdx.input.isKeyPressed(Input.Keys.D) && player.xMove) {
+//			player.moveX(1);
+//			if (player.updateState()) {
+//				player.resetAnimationCallTime();
+//			}
+//		}
 
 
-		if (!Gdx.input.isKeyPressed(Input.Keys.A) && !Gdx.input.isKeyPressed(Input.Keys.D)) {
+		if (!Gdx.input.isKeyPressed(Input.Keys.A) && !Gdx.input.isKeyPressed(Input.Keys.D) ||
+				((player.actionComponent.stateBools.get(player.actionComponent.stateDict.get("MOVING")))
+		&& ((player.actionComponent.curr_direction == -1 && Gdx.input.isKeyPressed(Input.Keys.D)
+				|| (player.actionComponent.curr_direction == 1 && Gdx.input.isKeyPressed(Input.Keys.A)))))) {
 			player.xStationary();
 			player.updateState();
 		}
 		player.updateState();
+
+		System.out.printf("velocity %f", player.actionComponent.body.getLinearVelocity().x);
 		// call after update, ground
 
 //		if (Gdx.input.isKeyPressed(Input.Keys.Q)) {

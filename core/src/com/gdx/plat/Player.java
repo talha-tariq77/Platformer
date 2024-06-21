@@ -24,7 +24,7 @@ public class Player {
     float maxSpeed = 5f;
     boolean NO_X_MOVE = false;
     boolean STUN = false;
-    boolean xMove = false;
+    boolean xMove = true;
     Filter testFilter;
     float airborneMaxSpeed = 0.75f * maxSpeed;
 
@@ -213,6 +213,7 @@ public class Player {
 
 //        System.out.println("Called");
 //        actionComponent.body.applyForceToCenter(10f * DirectionX, 0f, true);
+        System.out.printf("moving %d\n", DirectionX);
 
         if ((actionComponent.body.getLinearVelocity().x < 0 && DirectionX > 0) || (actionComponent.body.getLinearVelocity().x > 0 && DirectionX < 0)) {
             actionComponent.body.setLinearVelocity(0f, actionComponent.body.getLinearVelocity().y);
@@ -225,7 +226,8 @@ public class Player {
             speedCap = maxSpeed;
         }
 
-        actionComponent.body.applyLinearImpulse(new Vector2(speedCap * DirectionX * playerFixture.getDensity(), 0f), actionComponent.body.getWorldCenter(),true);
+        actionComponent.body.applyLinearImpulse(new Vector2(speedCap * DirectionX * playerFixture.getDensity()
+                * Globals.PLAYER_WIDTH * Globals.PLAYER_HEIGHT, 0f), actionComponent.body.getWorldCenter(),true);
 
         if (actionComponent.body.getLinearVelocity().x > speedCap) {
             actionComponent.body.setLinearVelocity(speedCap, actionComponent.body.getLinearVelocity().y);
@@ -262,7 +264,19 @@ public class Player {
     }
 
     public void xStationary() {
+        float speedCap;
+        if (actionComponent.stateBools.get(actionComponent.stateDict.get("AIRBORNE"))) {
+            speedCap = airborneMaxSpeed;
+        }
+        else {
+            speedCap = maxSpeed;
+        }
+
         actionComponent.stateBools.put(actionComponent.stateDict.get("MOVING"), false);
+        actionComponent.body.applyLinearImpulse(new Vector2(speedCap * actionComponent.curr_direction * -1
+        * playerFixture.getDensity() * Globals.PLAYER_WIDTH * Globals.PLAYER_HEIGHT, 0f),
+                actionComponent.body.getWorldCenter(), true);
+
         actionComponent.body.setLinearVelocity(0f, actionComponent.body.getLinearVelocity().y);
         // update state separate into the different state setters
     }

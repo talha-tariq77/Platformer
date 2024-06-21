@@ -26,10 +26,14 @@ public class InputHandler extends InputAdapter {
                 }
                 break;
             case Input.Keys.A:
-                player.moveX(-1);
-                if (player.updateState()) {
-                    player.resetAnimationCallTime();
+
+                if (!Gdx.input.isKeyPressed(Input.Keys.D)) {
+                    player.moveX(-1);
+                    if (player.updateState()) {
+                        player.resetAnimationCallTime();
+                    }
                 }
+
 //                if (!(Gdx.input.isKeyPressed(Input.Keys.D))) {
 //                    if (player.updateState(Player.State.MOVING)) {
 //                        player.updateAnimationCallTime(deltaTime);
@@ -37,13 +41,17 @@ public class InputHandler extends InputAdapter {
 //                }
                 break;
             case Input.Keys.D:
-                player.moveX(1);
-                if (player.currState.contains(8)) {
-                    System.out.println("yes");
+                if (!Gdx.input.isKeyPressed(Input.Keys.A)) {
+                    player.moveX(1);
+                    System.out.println("moving right");
+                    if (player.currState.contains(8)) {
+                        System.out.println("yes");
+                    }
+                    if (player.updateState()) {
+                        player.resetAnimationCallTime();
+                    }
                 }
-                if (player.updateState()) {
-                    player.resetAnimationCallTime();
-                }
+
 //                if (!(Gdx.input.isKeyPressed(Input.Keys.A))) {
 //                    if (player.updateState(Player.State.MOVING)) {
 //                        player.updateAnimationCallTime(deltaTime);
